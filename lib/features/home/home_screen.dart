@@ -3,6 +3,14 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers.dart';
 import '../../widgets/totp_account_card.dart';
+import '../../database/database.dart';
+import 'package:base32/base32.dart';
+import 'package:drift/drift.dart' as drift;
+import 'package:file_selector/file_selector.dart';
+import 'dart:io';
+import 'dart:convert';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -331,6 +339,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 },
               ),
               ListTile(
+                leading: const Icon(Icons.content_paste),
+                title: const Text('Paste URI'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showPasteUriDialog(context);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.file_upload),
+                title: const Text('Import from File'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _importFromFile(context);
+                },
+              ),
+              ListTile(
                 leading: const Icon(Icons.keyboard),
                 title: const Text('Enter Secret Manually'),
                 onTap: () {
@@ -344,5 +368,226 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         );
       }
     );
+  }
+
+  void _showPasteUriDialog(BuildContext context) {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Paste URI'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            hintText: 'otpauth://totp/...',
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _processUri(controller.text.trim());
+            },
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _processUri(String uriString) async {
+    if (!uriString.startsWith('otpauth://')) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invalid URI format')));
+      return;
+    }
+    // We will parse it and add it
+    // Wait, the logic is in ScannerScreen. Let's move it here or just duplicate it for now.
+    try {
+      final uri = Uri.parse(uriString);
+      final queryParams = uri.queryParameters;
+      final secret = queryParams['secret']?.toUpperCase().replaceAll(' ', '') ?? '';
+      
+      if (secret.isEmpty) throw Exception('No secret found');
+      
+      String issuer = queryParams['issuer'] ?? '';
+      String accountName = '';
+      
+      final pathParts = uri.path.substring(1).split(':');
+      if (pathParts.length > 1) {
+        if (issuer.isEmpty) issuer = Uri.decodeComponent(pathParts[0]);
+        accountName = Uri.decodeComponent(pathParts.sublist(1).join(':'));
+      } else if (pathParts.isNotEmpty) {
+        accountName = Uri.decodeComponent(pathParts[0]);
+      }
+      
+      if (issuer.isEmpty) issuer = 'Unknown';
+      if (accountName.isEmpty) accountName = 'Unknown';
+
+      final algorithm = queryParams['algorithm'] ?? 'SHA1';
+      final digits = int.tryParse(queryParams['digits'] ?? '6') ?? 6;
+      
+      final newAccount = AccountsCompanion.insert(
+        issuer: issuer,
+        accountName: accountName,
+        secret: secret,
+        algorithm: drift.Value(algorithm),
+        digits: drift.Value(digits),
+      );
+
+      await ref.read(accountRepositoryProvider).insertAccount(newAccount);
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Account added successfully')));
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to parse URI')));
+    }
+  }
+
+  Future<void> _importFromFile(BuildContext context) async {
+    try {
+      const XTypeGroup typeGroup = XTypeGroup(
+        label: 'files',
+      );
+      final XFile? xFile = await openFile(acceptedTypeGroups: <XTypeGroup>[typeGroup]);
+
+      if (xFile == null) return;
+      final file = File(xFile.path);
+      final extension = xFile.name.split('.').last.toLowerCase();
+
+      if (extension == 'sqlite') {
+        final confirm = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Restore Database'),
+            content: const Text('Warning: Restoring a database backup will overwrite all current accounts. This backup must have been created on this exact device (encryption key must match). Continue?'),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Restore', style: TextStyle(color: Colors.red)),
+              ),
+            ],
+          ),
+        );
+
+        if (confirm == true) {
+          final dbFolder = await getApplicationDocumentsDirectory();
+          final dbPath = p.join(dbFolder.path, 'safekey.sqlite');
+          
+          await ref.read(databaseProvider).close();
+          await file.copy(dbPath);
+          ref.invalidate(databaseProvider);
+          
+          if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Database restored!')));
+        }
+        return;
+      }
+
+      // Handle JSON/TXT
+      final content = await file.readAsString();
+      
+      if (content.trim().startsWith('{')) {
+        // Try parsing as JSON
+        final Map<String, dynamic> json = jsonDecode(content);
+        
+        // Aegis
+        if (json.containsKey('version') && json.containsKey('db')) {
+          final entries = json['db']['entries'] as List?;
+          if (entries != null) {
+            int addedCount = 0;
+            for (final entry in entries) {
+              if (entry['type'] != 'totp') continue;
+              final info = entry['info'];
+              final secret = info['secret'];
+              final issuer = entry['issuer'] ?? 'Unknown';
+              final accountName = entry['name'] ?? 'Unknown';
+              final algo = info['algo'] ?? 'SHA1';
+              final digits = info['digits'] ?? 6;
+              
+              final newAccount = AccountsCompanion.insert(
+                issuer: issuer,
+                accountName: accountName,
+                secret: secret,
+                algorithm: drift.Value(algo.toString().toUpperCase()),
+                digits: drift.Value(digits),
+              );
+              await ref.read(accountRepositoryProvider).insertAccount(newAccount);
+              addedCount++;
+            }
+            if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Imported $addedCount accounts from Aegis backup!')));
+            return;
+          }
+        }
+        
+        // 2FAS
+        if (json.containsKey('services') && json['services'] is List) {
+          final services = json['services'] as List;
+          int addedCount = 0;
+          for (final service in services) {
+            final secret = service['secret'];
+            if (secret == null) continue;
+            final otp = service['otp'] ?? {};
+            final issuer = service['name'] ?? 'Unknown';
+            final algo = otp['algorithm'] ?? 'SHA1';
+            final digits = otp['digits'] ?? 6;
+            
+            final newAccount = AccountsCompanion.insert(
+              issuer: issuer,
+              accountName: issuer,
+              secret: secret,
+              algorithm: drift.Value(algo.toString().toUpperCase()),
+              digits: drift.Value(digits),
+            );
+            await ref.read(accountRepositoryProvider).insertAccount(newAccount);
+            addedCount++;
+          }
+          if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Imported $addedCount accounts from 2FAS backup!')));
+          return;
+        }
+      }
+
+      // Try parsing as raw otpauth:// URIs line by line
+      final lines = content.split('\n');
+      int addedCount = 0;
+      for (final line in lines) {
+        final uriString = line.trim();
+        if (uriString.startsWith('otpauth://')) {
+          try {
+            final uri = Uri.parse(uriString);
+            final queryParams = uri.queryParameters;
+            final secret = queryParams['secret']?.toUpperCase().replaceAll(' ', '') ?? '';
+            if (secret.isEmpty) continue;
+            String issuer = queryParams['issuer'] ?? 'Unknown';
+            String accountName = 'Unknown';
+            final pathParts = uri.path.substring(1).split(':');
+            if (pathParts.length > 1) {
+              if (issuer == 'Unknown') issuer = Uri.decodeComponent(pathParts[0]);
+              accountName = Uri.decodeComponent(pathParts.sublist(1).join(':'));
+            } else if (pathParts.isNotEmpty) {
+              accountName = Uri.decodeComponent(pathParts[0]);
+            }
+            final algo = queryParams['algorithm'] ?? 'SHA1';
+            final digits = int.tryParse(queryParams['digits'] ?? '6') ?? 6;
+            final newAccount = AccountsCompanion.insert(
+              issuer: issuer,
+              accountName: accountName,
+              secret: secret,
+              algorithm: drift.Value(algo),
+              digits: drift.Value(digits),
+            );
+            await ref.read(accountRepositoryProvider).insertAccount(newAccount);
+            addedCount++;
+          } catch (_) {}
+        }
+      }
+
+      if (addedCount > 0) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Imported $addedCount accounts from URIs!')));
+      } else {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No recognizable accounts found in file')));
+      }
+
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to import file: $e')));
+    }
   }
 }
