@@ -1,0 +1,13 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:safekey/main.dart';
+
+void main() {
+  testWidgets('App loads smoke test', (WidgetTester tester) async {
+    // Build our app and trigger a frame.
+    await tester.pumpWidget(const ProviderScope(child: SafeKeyApp()));
+
+    // Verify that our splash screen text is found.
+    expect(find.text('SafeKey'), findsOneWidget);
+  });
+}
