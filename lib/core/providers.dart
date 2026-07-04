@@ -68,7 +68,7 @@ class SortOrderNotifier extends Notifier<String> {
   @override
   String build() {
     final prefs = ref.watch(sharedPreferencesProvider);
-    return prefs.getString('sort_order') ?? 'recent'; // 'recent', 'issuer', 'name'
+    return prefs.getString('sort_order') ?? 'custom'; // 'custom', 'recent', 'issuer', 'name'
   }
 
   void setSortOrder(String order) {

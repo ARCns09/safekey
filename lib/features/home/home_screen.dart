@@ -165,9 +165,45 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               icon: const Icon(Icons.sort),
               tooltip: 'Sort/Group',
               onSelected: (value) {
-                ref.read(sortOrderProvider.notifier).setSortOrder(value);
+                if (value == 'select_mode') {
+                  // Enter selection mode with first item (or just empty state)
+                  setState(() {
+                    _selectedIds.clear();
+                    // We just need the UI to show selection mode. But it needs an ID to start?
+                    // We can just add a dummy ID or modify logic.
+                    // Actually, if we just want to allow tapping to select, we can add a boolean `_isSelecting`.
+                    // But isSelectionMode is `_selectedIds.isNotEmpty`.
+                    // Let's just add the first account to selection to trigger the mode.
+                  });
+                  final accounts = ref.read(watchAccountsProvider).value ?? [];
+                  if (accounts.isNotEmpty) {
+                    _toggleSelection(accounts.first.id);
+                  }
+                } else {
+                  ref.read(sortOrderProvider.notifier).setSortOrder(value);
+                }
               },
               itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'custom',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.drag_handle, size: 20),
+                      const SizedBox(width: 8),
+                      Text('Custom Order', style: TextStyle(fontWeight: sortOrder == 'custom' ? FontWeight.bold : FontWeight.normal)),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'select_mode',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.checklist, size: 20),
+                      const SizedBox(width: 8),
+                      const Text('Select Accounts'),
+                    ],
+                  ),
+                ),
                 PopupMenuItem(
                   value: 'recent',
                   child: Row(
@@ -240,8 +276,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             filteredAccounts.sort((a, b) => a.accountName.toLowerCase().compareTo(b.accountName.toLowerCase()));
           } else if (sortOrder == 'issuer') {
             filteredAccounts.sort((a, b) => a.issuer.toLowerCase().compareTo(b.issuer.toLowerCase()));
+          } else if (sortOrder == 'custom') {
+            filteredAccounts.sort((a, b) => a.sortIndex.compareTo(b.sortIndex));
           } else {
-            // 'recent' (default), descending ID
+            // 'recent', descending ID
             filteredAccounts.sort((a, b) => b.id.compareTo(a.id));
           }
 
@@ -257,7 +295,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             );
           }
-          return ListView.builder(
+          return ReorderableListView.builder(
+            buildDefaultDragHandles: false, // We'll trigger drag manually on the card if needed, or long press
+            onReorder: (oldIndex, newIndex) async {
+              if (newIndex > oldIndex) {
+                newIndex -= 1;
+              }
+              if (_isSearching) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cannot reorder while searching')));
+                return;
+              }
+              if (sortOrder != 'custom') {
+                ref.read(sortOrderProvider.notifier).setSortOrder('custom');
+              }
+              
+              final currentList = List<Account>.from(filteredAccounts);
+              final item = currentList.removeAt(oldIndex);
+              currentList.insert(newIndex, item);
+
+              final repo = ref.read(accountRepositoryProvider);
+              for (int i = 0; i < currentList.length; i++) {
+                final acc = currentList[i];
+                if (acc.sortIndex != i) {
+                  await repo.updateAccount(acc.copyWith(sortIndex: i));
+                }
+              }
+            },
             itemCount: filteredAccounts.length,
             itemBuilder: (context, index) {
               final account = filteredAccounts[index];
@@ -293,15 +356,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     SnackBar(content: Text('${account.accountName} deleted')),
                   );
                 },
-                child: TotpAccountCard(
-                  account: account,
-                  isSelected: _selectedIds.contains(account.id),
-                  onLongPress: () {
-                    if (!_isSearching) _toggleSelection(account.id);
-                  },
-                  onTap: isSelectionMode ? () => _toggleSelection(account.id) : null,
+                child: ReorderableDelayedDragStartListener(
+                  index: index,
+                  child: TotpAccountCard(
+                    account: account,
+                    isSelected: _selectedIds.contains(account.id),
+                    onLongPress: null, // Disable long press so it doesn't conflict with drag-to-reorder
+                    onTap: isSelectionMode ? () => _toggleSelection(account.id) : null,
+                  ),
                 ),
-              ).animate().fadeIn(duration: 300.ms, delay: (index * 50).ms).slideX(begin: 0.05, end: 0, duration: 300.ms, curve: Curves.easeOutQuad);
+              ).animate(key: ValueKey('anim_${account.id}')).fadeIn(duration: 300.ms, delay: (index * 50).ms).slideX(begin: 0.05, end: 0, duration: 300.ms, curve: Curves.easeOutQuad);
             },
           );
         },

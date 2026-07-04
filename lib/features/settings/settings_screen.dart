@@ -74,6 +74,7 @@ class SettingsScreen extends ConsumerWidget {
             trailing: DropdownButton<String>(
               value: sortOrder,
               items: const [
+                DropdownMenuItem(value: 'custom', child: Text('Custom Order (Drag & Drop)')),
                 DropdownMenuItem(value: 'recent', child: Text('Recently Added')),
                 DropdownMenuItem(value: 'name', child: Text('Account Name (A-Z)')),
                 DropdownMenuItem(value: 'issuer', child: Text('Issuer (A-Z)')),
