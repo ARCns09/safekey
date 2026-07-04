@@ -94,6 +94,21 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  static const VerificationMeta _isPinnedMeta = const VerificationMeta(
+    'isPinned',
+  );
+  @override
+  late final GeneratedColumn<bool> isPinned = GeneratedColumn<bool>(
+    'is_pinned',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_pinned" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -104,6 +119,7 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
     digits,
     period,
     createdAt,
+    isPinned,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -171,6 +187,12 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
         createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
       );
     }
+    if (data.containsKey('is_pinned')) {
+      context.handle(
+        _isPinnedMeta,
+        isPinned.isAcceptableOrUnknown(data['is_pinned']!, _isPinnedMeta),
+      );
+    }
     return context;
   }
 
@@ -212,6 +234,10 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
+      isPinned: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_pinned'],
+      )!,
     );
   }
 
@@ -230,6 +256,7 @@ class Account extends DataClass implements Insertable<Account> {
   final int digits;
   final int period;
   final DateTime createdAt;
+  final bool isPinned;
   const Account({
     required this.id,
     required this.issuer,
@@ -239,6 +266,7 @@ class Account extends DataClass implements Insertable<Account> {
     required this.digits,
     required this.period,
     required this.createdAt,
+    required this.isPinned,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -251,6 +279,7 @@ class Account extends DataClass implements Insertable<Account> {
     map['digits'] = Variable<int>(digits);
     map['period'] = Variable<int>(period);
     map['created_at'] = Variable<DateTime>(createdAt);
+    map['is_pinned'] = Variable<bool>(isPinned);
     return map;
   }
 
@@ -264,6 +293,7 @@ class Account extends DataClass implements Insertable<Account> {
       digits: Value(digits),
       period: Value(period),
       createdAt: Value(createdAt),
+      isPinned: Value(isPinned),
     );
   }
 
@@ -281,6 +311,7 @@ class Account extends DataClass implements Insertable<Account> {
       digits: serializer.fromJson<int>(json['digits']),
       period: serializer.fromJson<int>(json['period']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      isPinned: serializer.fromJson<bool>(json['isPinned']),
     );
   }
   @override
@@ -295,6 +326,7 @@ class Account extends DataClass implements Insertable<Account> {
       'digits': serializer.toJson<int>(digits),
       'period': serializer.toJson<int>(period),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'isPinned': serializer.toJson<bool>(isPinned),
     };
   }
 
@@ -307,6 +339,7 @@ class Account extends DataClass implements Insertable<Account> {
     int? digits,
     int? period,
     DateTime? createdAt,
+    bool? isPinned,
   }) => Account(
     id: id ?? this.id,
     issuer: issuer ?? this.issuer,
@@ -316,6 +349,7 @@ class Account extends DataClass implements Insertable<Account> {
     digits: digits ?? this.digits,
     period: period ?? this.period,
     createdAt: createdAt ?? this.createdAt,
+    isPinned: isPinned ?? this.isPinned,
   );
   Account copyWithCompanion(AccountsCompanion data) {
     return Account(
@@ -329,6 +363,7 @@ class Account extends DataClass implements Insertable<Account> {
       digits: data.digits.present ? data.digits.value : this.digits,
       period: data.period.present ? data.period.value : this.period,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      isPinned: data.isPinned.present ? data.isPinned.value : this.isPinned,
     );
   }
 
@@ -342,7 +377,8 @@ class Account extends DataClass implements Insertable<Account> {
           ..write('algorithm: $algorithm, ')
           ..write('digits: $digits, ')
           ..write('period: $period, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('isPinned: $isPinned')
           ..write(')'))
         .toString();
   }
@@ -357,6 +393,7 @@ class Account extends DataClass implements Insertable<Account> {
     digits,
     period,
     createdAt,
+    isPinned,
   );
   @override
   bool operator ==(Object other) =>
@@ -369,7 +406,8 @@ class Account extends DataClass implements Insertable<Account> {
           other.algorithm == this.algorithm &&
           other.digits == this.digits &&
           other.period == this.period &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.isPinned == this.isPinned);
 }
 
 class AccountsCompanion extends UpdateCompanion<Account> {
@@ -381,6 +419,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
   final Value<int> digits;
   final Value<int> period;
   final Value<DateTime> createdAt;
+  final Value<bool> isPinned;
   const AccountsCompanion({
     this.id = const Value.absent(),
     this.issuer = const Value.absent(),
@@ -390,6 +429,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     this.digits = const Value.absent(),
     this.period = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.isPinned = const Value.absent(),
   });
   AccountsCompanion.insert({
     this.id = const Value.absent(),
@@ -400,6 +440,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     this.digits = const Value.absent(),
     this.period = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.isPinned = const Value.absent(),
   }) : issuer = Value(issuer),
        accountName = Value(accountName),
        secret = Value(secret);
@@ -412,6 +453,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     Expression<int>? digits,
     Expression<int>? period,
     Expression<DateTime>? createdAt,
+    Expression<bool>? isPinned,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -422,6 +464,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
       if (digits != null) 'digits': digits,
       if (period != null) 'period': period,
       if (createdAt != null) 'created_at': createdAt,
+      if (isPinned != null) 'is_pinned': isPinned,
     });
   }
 
@@ -434,6 +477,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     Value<int>? digits,
     Value<int>? period,
     Value<DateTime>? createdAt,
+    Value<bool>? isPinned,
   }) {
     return AccountsCompanion(
       id: id ?? this.id,
@@ -444,6 +488,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
       digits: digits ?? this.digits,
       period: period ?? this.period,
       createdAt: createdAt ?? this.createdAt,
+      isPinned: isPinned ?? this.isPinned,
     );
   }
 
@@ -474,6 +519,9 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (isPinned.present) {
+      map['is_pinned'] = Variable<bool>(isPinned.value);
+    }
     return map;
   }
 
@@ -487,7 +535,8 @@ class AccountsCompanion extends UpdateCompanion<Account> {
           ..write('algorithm: $algorithm, ')
           ..write('digits: $digits, ')
           ..write('period: $period, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('isPinned: $isPinned')
           ..write(')'))
         .toString();
   }
@@ -514,6 +563,7 @@ typedef $$AccountsTableCreateCompanionBuilder =
       Value<int> digits,
       Value<int> period,
       Value<DateTime> createdAt,
+      Value<bool> isPinned,
     });
 typedef $$AccountsTableUpdateCompanionBuilder =
     AccountsCompanion Function({
@@ -525,6 +575,7 @@ typedef $$AccountsTableUpdateCompanionBuilder =
       Value<int> digits,
       Value<int> period,
       Value<DateTime> createdAt,
+      Value<bool> isPinned,
     });
 
 class $$AccountsTableFilterComposer
@@ -573,6 +624,11 @@ class $$AccountsTableFilterComposer
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isPinned => $composableBuilder(
+    column: $table.isPinned,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -625,6 +681,11 @@ class $$AccountsTableOrderingComposer
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get isPinned => $composableBuilder(
+    column: $table.isPinned,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$AccountsTableAnnotationComposer
@@ -661,6 +722,9 @@ class $$AccountsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isPinned =>
+      $composableBuilder(column: $table.isPinned, builder: (column) => column);
 }
 
 class $$AccountsTableTableManager
@@ -699,6 +763,7 @@ class $$AccountsTableTableManager
                 Value<int> digits = const Value.absent(),
                 Value<int> period = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<bool> isPinned = const Value.absent(),
               }) => AccountsCompanion(
                 id: id,
                 issuer: issuer,
@@ -708,6 +773,7 @@ class $$AccountsTableTableManager
                 digits: digits,
                 period: period,
                 createdAt: createdAt,
+                isPinned: isPinned,
               ),
           createCompanionCallback:
               ({
@@ -719,6 +785,7 @@ class $$AccountsTableTableManager
                 Value<int> digits = const Value.absent(),
                 Value<int> period = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<bool> isPinned = const Value.absent(),
               }) => AccountsCompanion.insert(
                 id: id,
                 issuer: issuer,
@@ -728,6 +795,7 @@ class $$AccountsTableTableManager
                 digits: digits,
                 period: period,
                 createdAt: createdAt,
+                isPinned: isPinned,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

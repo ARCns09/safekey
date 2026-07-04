@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:simple_icons/simple_icons.dart';
 import 'package:otp/otp.dart';
 import '../database/database.dart';
 import '../core/providers.dart';
@@ -181,19 +180,26 @@ class _TotpAccountCardState extends ConsumerState<TotpAccountCard> {
                    padding: const EdgeInsets.only(right: 16.0),
                    child: Icon(Icons.check_circle, color: Theme.of(context).colorScheme.primary),
                  ),
-              _buildBrandIcon(context),
-              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      widget.account.issuer,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: Colors.grey.shade600,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.5,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          widget.account.issuer,
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            color: Colors.grey.shade600,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        if (widget.account.isPinned)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: Icon(Icons.push_pin, size: 16, color: Theme.of(context).colorScheme.primary),
+                          ),
+                      ],
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -258,57 +264,4 @@ class _TotpAccountCardState extends ConsumerState<TotpAccountCard> {
     );
   }
 
-  Widget _buildBrandIcon(BuildContext context) {
-    IconData? iconData;
-    Color? iconColor;
-    
-    final name = widget.account.issuer.toLowerCase().replaceAll(' ', '');
-    switch (name) {
-      case 'google': iconData = SimpleIcons.google; iconColor = const Color(0xFFDB4437); break;
-      case 'github': iconData = SimpleIcons.github; break;
-      case 'gitlab': iconData = SimpleIcons.gitlab; iconColor = const Color(0xFFFC6D26); break;
-      case 'discord': iconData = SimpleIcons.discord; iconColor = const Color(0xFF5865F2); break;
-      case 'steam': iconData = SimpleIcons.steam; iconColor = const Color(0xFF171A21); break;
-      case 'facebook': iconData = SimpleIcons.facebook; iconColor = const Color(0xFF1877F2); break;
-      case 'instagram': iconData = SimpleIcons.instagram; iconColor = const Color(0xFFE4405F); break;
-      case 'reddit': iconData = SimpleIcons.reddit; iconColor = const Color(0xFFFF4500); break;
-      case 'x':
-      case 'twitter': iconData = SimpleIcons.x; break;
-      case 'dropbox': iconData = SimpleIcons.dropbox; iconColor = const Color(0xFF0061FF); break;
-      case 'bitwarden': iconData = SimpleIcons.bitwarden; iconColor = const Color(0xFF175DDC); break;
-    }
-
-    if (iconData != null) {
-      return Container(
-        width: 48,
-        height: 48,
-        decoration: BoxDecoration(
-          color: (iconColor ?? Theme.of(context).colorScheme.primary).withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Icon(iconData, color: iconColor ?? Theme.of(context).colorScheme.primary, size: 28),
-      );
-    }
-
-    // Fallback monogram
-    final firstLetter = widget.account.issuer.isNotEmpty ? widget.account.issuer[0].toUpperCase() : '?';
-    return Container(
-      width: 48,
-      height: 48,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Center(
-        child: Text(
-          firstLetter,
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onPrimaryContainer,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-    );
-  }
 }

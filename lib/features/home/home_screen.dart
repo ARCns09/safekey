@@ -26,6 +26,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     });
   }
 
+  Future<void> _togglePinSelectedAccounts(bool pin) async {
+    final accounts = ref.read(watchAccountsProvider).value ?? [];
+    final toUpdate = accounts.where((acc) => _selectedIds.contains(acc.id)).toList();
+    for (final acc in toUpdate) {
+      await ref.read(accountRepositoryProvider).updateAccount(acc.copyWith(isPinned: pin));
+    }
+    setState(() {
+      _selectedIds.clear();
+    });
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${toUpdate.length} account(s) ${pin ? 'pinned' : 'unpinned'}')),
+      );
+    }
+  }
+
   Future<void> _deleteSelectedAccounts() async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -75,6 +91,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             title: Text('${_selectedIds.length} selected'),
             actions: [
               IconButton(
+                icon: const Icon(Icons.push_pin),
+                tooltip: 'Pin Selected',
+                onPressed: () => _togglePinSelectedAccounts(true),
+              ),
+              IconButton(
+                icon: const Icon(Icons.push_pin_outlined),
+                tooltip: 'Unpin Selected',
+                onPressed: () => _togglePinSelectedAccounts(false),
+              ),
+              IconButton(
                 icon: const Icon(Icons.qr_code_2),
                 tooltip: 'Export Selected',
                 onPressed: () {
@@ -121,6 +147,46 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             },
           ),
           if (!_isSearching)
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.sort),
+              tooltip: 'Sort/Group',
+              onSelected: (value) {
+                ref.read(sortOrderProvider.notifier).setSortOrder(value);
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'recent',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.access_time, size: 20),
+                      const SizedBox(width: 8),
+                      Text('Recently Added', style: TextStyle(fontWeight: sortOrder == 'recent' ? FontWeight.bold : FontWeight.normal)),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'name',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.sort_by_alpha, size: 20),
+                      const SizedBox(width: 8),
+                      Text('Alphabetical', style: TextStyle(fontWeight: sortOrder == 'name' ? FontWeight.bold : FontWeight.normal)),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'issuer',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.work_outline, size: 20),
+                      const SizedBox(width: 8),
+                      Text('Group by Issuer', style: TextStyle(fontWeight: sortOrder == 'issuer' ? FontWeight.bold : FontWeight.normal)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          if (!_isSearching)
             IconButton(
               icon: const Icon(Icons.settings),
               onPressed: () {
@@ -164,6 +230,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             // 'recent' (default), descending ID
             filteredAccounts.sort((a, b) => b.id.compareTo(a.id));
           }
+
+          var pinned = filteredAccounts.where((a) => a.isPinned).toList();
+          var unpinned = filteredAccounts.where((a) => !a.isPinned).toList();
+          filteredAccounts = [...pinned, ...unpinned];
 
           if (filteredAccounts.isEmpty) {
             return Center(

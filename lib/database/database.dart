@@ -21,6 +21,7 @@ class Accounts extends Table {
   IntColumn get digits => integer().withDefault(const Constant(6))();
   IntColumn get period => integer().withDefault(const Constant(30))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  BoolColumn get isPinned => boolean().withDefault(const Constant(false))();
 }
 
 @DriftDatabase(tables: [Accounts])
@@ -28,7 +29,19 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (Migrator m) async {
+      await m.createAll();
+    },
+    onUpgrade: (Migrator m, int from, int to) async {
+      if (from < 2) {
+        await m.addColumn(accounts, accounts.isPinned);
+      }
+    },
+  );
 }
 
 LazyDatabase _openConnection() {
