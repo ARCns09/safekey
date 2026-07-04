@@ -75,7 +75,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             title: Text('${_selectedIds.length} selected'),
             actions: [
               IconButton(
+                icon: const Icon(Icons.qr_code_2),
+                tooltip: 'Export Selected',
+                onPressed: () {
+                  final accounts = ref.read(watchAccountsProvider).value ?? [];
+                  final toExport = accounts.where((acc) => _selectedIds.contains(acc.id)).toList();
+                  setState(() => _selectedIds.clear());
+                  context.push('/export', extra: toExport);
+                },
+              ),
+              IconButton(
                 icon: const Icon(Icons.delete),
+                tooltip: 'Delete Selected',
                 onPressed: _deleteSelectedAccounts,
               ),
             ],

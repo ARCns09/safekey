@@ -5,6 +5,8 @@ import '../features/home/home_screen.dart';
 import '../features/add_account/add_account_screen.dart';
 import '../features/scanner/scanner_screen.dart';
 import '../features/settings/settings_screen.dart';
+import '../features/settings/export_screen.dart';
+import '../database/database.dart';
 
 final goRouter = GoRouter(
   initialLocation: '/',
@@ -30,6 +32,13 @@ final goRouter = GoRouter(
       builder: (context, state) {
         final isGoogleImport = state.uri.queryParameters['mode'] == 'google';
         return ScannerScreen(isGoogleImport: isGoogleImport);
+      },
+    ),
+    GoRoute(
+      path: '/export',
+      builder: (context, state) {
+        final accounts = state.extra as List<Account>? ?? [];
+        return ExportScreen(accounts: accounts);
       },
     ),
     GoRoute(

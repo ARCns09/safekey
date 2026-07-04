@@ -22,3 +22,9 @@ subprojects {
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
+
+subprojects {
+    project.extensions.findByType<com.android.build.gradle.BaseExtension>()?.let { ext ->
+        ext.compileSdkVersion(36)
+    }
+}

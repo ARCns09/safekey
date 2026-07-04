@@ -1,5 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
+import 'package:share_plus/share_plus.dart';
 import '../../core/providers.dart';
 import '../../core/security_provider.dart';
 
@@ -78,6 +83,41 @@ class SettingsScreen extends ConsumerWidget {
                 }
               },
             ),
+          ),
+          ListTile(
+            title: const Text('Export All Accounts'),
+            subtitle: const Text('Export accounts as standard QR codes'),
+            leading: const Icon(Icons.qr_code_scanner),
+            onTap: () {
+              final accounts = ref.read(watchAccountsProvider).value ?? [];
+              if (accounts.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No accounts to export.')));
+                return;
+              }
+              context.push('/export', extra: accounts);
+            },
+          ),
+          ListTile(
+            title: const Text('Export Database Backup'),
+            subtitle: const Text('Export the encrypted safekey.sqlite file'),
+            leading: const Icon(Icons.save),
+            onTap: () async {
+              try {
+                final dbFolder = await getApplicationDocumentsDirectory();
+                final dbPath = p.join(dbFolder.path, 'safekey.sqlite');
+                if (await File(dbPath).exists()) {
+                  await Share.shareXFiles([XFile(dbPath)], text: 'SafeKey Encrypted Backup');
+                } else {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No database found.')));
+                  }
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Backup failed: $e')));
+                }
+              }
+            },
           ),
         ],
       ),

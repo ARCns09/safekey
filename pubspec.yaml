@@ -49,6 +49,9 @@ dependencies:
   shared_preferences: ^2.2.35
   otpauth_migration: ^0.0.7
   image_picker: ^1.2.3
+  qr_flutter: ^4.1.0
+  share_plus: ^13.2.0
+  simple_icons: ^16.23.0
 
 dev_dependencies:
   flutter_test:
