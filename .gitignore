@@ -50,3 +50,6 @@ app.*.map.json
 key.properties
 local.properties
 sqlcipher_flutter_libs_android/
+
+# Desktop Platforms
+linux/
