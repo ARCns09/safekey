@@ -7,43 +7,98 @@ import '../features/scanner/scanner_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/settings/export_screen.dart';
 import '../database/database.dart';
+import 'package:flutter/material.dart';
+
+CustomTransitionPage buildPageWithDefaultTransition({
+  required BuildContext context,
+  required GoRouterState state,
+  required Widget child,
+}) {
+  return CustomTransitionPage(
+    key: state.pageKey,
+    child: child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      return FadeTransition(
+        opacity: animation,
+        child: SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0.0, 0.05),
+            end: Offset.zero,
+          ).animate(CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutQuad,
+          )),
+          child: child,
+        ),
+      );
+    },
+  );
+}
 
 final goRouter = GoRouter(
   initialLocation: '/',
   routes: [
     GoRoute(
       path: '/',
-      builder: (context, state) => const SplashScreen(),
+      pageBuilder: (context, state) => buildPageWithDefaultTransition(
+        context: context,
+        state: state,
+        child: const SplashScreen(),
+      ),
     ),
     GoRoute(
       path: '/onboarding',
-      builder: (context, state) => const OnboardingScreen(),
+      pageBuilder: (context, state) => buildPageWithDefaultTransition(
+        context: context,
+        state: state,
+        child: const OnboardingScreen(),
+      ),
     ),
     GoRoute(
       path: '/home',
-      builder: (context, state) => const HomeScreen(),
+      pageBuilder: (context, state) => buildPageWithDefaultTransition(
+        context: context,
+        state: state,
+        child: const HomeScreen(),
+      ),
     ),
     GoRoute(
       path: '/add',
-      builder: (context, state) => const AddAccountScreen(),
+      pageBuilder: (context, state) => buildPageWithDefaultTransition(
+        context: context,
+        state: state,
+        child: const AddAccountScreen(),
+      ),
     ),
     GoRoute(
       path: '/scanner',
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final isGoogleImport = state.uri.queryParameters['mode'] == 'google';
-        return ScannerScreen(isGoogleImport: isGoogleImport);
+        return buildPageWithDefaultTransition(
+          context: context,
+          state: state,
+          child: ScannerScreen(isGoogleImport: isGoogleImport),
+        );
       },
     ),
     GoRoute(
       path: '/export',
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final accounts = state.extra as List<Account>? ?? [];
-        return ExportScreen(accounts: accounts);
+        return buildPageWithDefaultTransition(
+          context: context,
+          state: state,
+          child: ExportScreen(accounts: accounts),
+        );
       },
     ),
     GoRoute(
       path: '/settings',
-      builder: (context, state) => const SettingsScreen(),
+      pageBuilder: (context, state) => buildPageWithDefaultTransition(
+        context: context,
+        state: state,
+        child: const SettingsScreen(),
+      ),
     ),
   ],
 );

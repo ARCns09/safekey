@@ -30,6 +30,7 @@ class _TotpAccountCardState extends ConsumerState<TotpAccountCard> {
   double _progress = 0.0;
   bool _isCopied = false;
   bool _isRevealed = false;
+  bool _isPressed = false;
 
   @override
   void initState() {
@@ -161,16 +162,23 @@ class _TotpAccountCardState extends ConsumerState<TotpAccountCard> {
       }
     }
 
-    return Card(
-      color: widget.isSelected ? Theme.of(context).colorScheme.primaryContainer : Theme.of(context).cardColor,
-      elevation: widget.isSelected ? 4 : 2,
-      shadowColor: Colors.black.withValues(alpha: 0.2),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: InkWell(
-        onTap: _handleTap,
-        onLongPress: widget.onLongPress,
-        borderRadius: BorderRadius.circular(24),
+    return AnimatedScale(
+      scale: _isPressed ? 0.95 : 1.0,
+      duration: const Duration(milliseconds: 100),
+      curve: Curves.easeInOut,
+      child: Card(
+        color: widget.isSelected ? Theme.of(context).colorScheme.primaryContainer : Theme.of(context).cardColor,
+        elevation: widget.isSelected ? 4 : 2,
+        shadowColor: Colors.black.withValues(alpha: 0.2),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        child: InkWell(
+          onTapDown: (_) => setState(() => _isPressed = true),
+          onTapUp: (_) => setState(() => _isPressed = false),
+          onTapCancel: () => setState(() => _isPressed = false),
+          onTap: _handleTap,
+          onLongPress: widget.onLongPress,
+          borderRadius: BorderRadius.circular(24),
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: Row(
@@ -217,13 +225,14 @@ class _TotpAccountCardState extends ConsumerState<TotpAccountCard> {
                         return FadeTransition(opacity: animation, child: child);
                       },
                       child: Text(
-                        _isCopied ? 'Copied to Clipboard' : displayCode,
+                        _isCopied ? 'Copied!' : displayCode,
                         key: ValueKey<String>(_isCopied ? 'copied' : displayCode),
                         style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           color: _isCopied ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurface,
                           fontWeight: FontWeight.bold,
-                          letterSpacing: _isCopied ? 0.0 : 3.0,
-                          fontFamily: 'monospace',
+                          letterSpacing: _isCopied ? 1.0 : 3.0,
+                          fontSize: _isCopied ? 20.0 : null,
+                          fontFamily: _isCopied ? null : 'monospace',
                         ),
                       ),
                     ),
@@ -260,6 +269,7 @@ class _TotpAccountCardState extends ConsumerState<TotpAccountCard> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

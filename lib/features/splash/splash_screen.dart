@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/providers.dart';
@@ -36,13 +37,19 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.primary,
-      body: const Center(
+      body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.security, size: 100, color: Colors.white),
-            SizedBox(height: 16),
-            Text('SafeKey', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white)),
+            const Icon(Icons.security, size: 100, color: Colors.white)
+              .animate()
+              .scale(duration: 500.ms, curve: Curves.easeOutBack)
+              .fadeIn(duration: 400.ms),
+            const SizedBox(height: 16),
+            const Text('SafeKey', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white))
+              .animate()
+              .fadeIn(delay: 300.ms, duration: 400.ms)
+              .slideY(begin: 0.2, end: 0, duration: 400.ms, curve: Curves.easeOutQuad),
           ],
         ),
       ),

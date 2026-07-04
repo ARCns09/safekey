@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers.dart';
@@ -126,20 +127,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ],
           )
         : AppBar(
-            title: _isSearching 
-              ? TextField(
-              autofocus: true,
-              decoration: const InputDecoration(
-                hintText: 'Search accounts...',
-                border: InputBorder.none,
-              ),
-              onChanged: (val) {
-                setState(() {
-                  _searchQuery = val.toLowerCase();
-                });
-              },
-            )
-          : const Text('SafeKey', style: TextStyle(fontWeight: FontWeight.bold)),
+            title: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
+              child: _isSearching
+                ? TextField(
+                    key: const ValueKey('search'),
+                    autofocus: true,
+                    decoration: const InputDecoration(
+                      hintText: 'Search accounts...',
+                      border: InputBorder.none,
+                    ),
+                    onChanged: (val) {
+                      setState(() {
+                        _searchQuery = val.toLowerCase();
+                      });
+                    },
+                  )
+                : const Text('SafeKey', key: ValueKey('title'), style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
         actions: [
           IconButton(
             icon: Icon(_isSearching ? Icons.close : Icons.search),
@@ -221,7 +227,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     'Tap + to add a new account',
                     style: TextStyle(color: Colors.grey),
                   ),
-                ],
+                ].animate(interval: 100.ms).fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0, duration: 400.ms, curve: Curves.easeOutQuad),
               ),
             );
           }
@@ -295,7 +301,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   },
                   onTap: isSelectionMode ? () => _toggleSelection(account.id) : null,
                 ),
-              );
+              ).animate().fadeIn(duration: 300.ms, delay: (index * 50).ms).slideX(begin: 0.05, end: 0, duration: 300.ms, curve: Curves.easeOutQuad);
             },
           );
         },

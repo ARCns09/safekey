@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/providers.dart';
@@ -120,7 +121,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             ),
             textAlign: TextAlign.center,
           ),
-        ],
+        ].animate(interval: 100.ms).fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0, duration: 400.ms, curve: Curves.easeOutQuad),
       ),
     );
   }
