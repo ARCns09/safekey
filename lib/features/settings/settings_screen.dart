@@ -232,14 +232,16 @@ class SettingsScreen extends ConsumerWidget {
       }
       
       final String fileName = 'safekey_backup_${DateTime.now().millisecondsSinceEpoch}.sqlite';
-      final saveLocation = await getSaveLocation(suggestedName: fileName);
-      if (saveLocation != null) {
-        final Uint8List fileData = await dbFile.readAsBytes();
-        final XFile xFile = XFile.fromData(fileData, name: fileName);
-        await xFile.saveTo(saveLocation.path);
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Database exported to ${saveLocation.path}')));
-        }
+      final tempDir = await getTemporaryDirectory();
+      final tempFile = File(p.join(tempDir.path, fileName));
+      await dbFile.copy(tempFile.path);
+      
+      final XFile xFile = XFile(tempFile.path);
+      
+      final result = await Share.shareXFiles([xFile], text: 'SafeKey Database Backup');
+      
+      if (context.mounted && result.status == ShareResultStatus.success) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Database exported successfully')));
       }
     } catch (e) {
       if (context.mounted) {
