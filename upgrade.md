@@ -35,7 +35,7 @@ There are two encryption options available: SQLCipher and SQLite3 Multiple Ciphe
 SQLCipher can be enabled by adding this to your pubspec, `sqlcipher_flutter_libs` is no
 longer functional:
 
-```yaml
+```yaml 
 hooks:
   user_defines:
     sqlite3:
