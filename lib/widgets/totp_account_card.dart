@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:otp/otp.dart';
 import '../database/database.dart';
 import '../core/providers.dart';
@@ -170,8 +171,8 @@ class _TotpAccountCardState extends ConsumerState<TotpAccountCard> {
         color: widget.isSelected ? Theme.of(context).colorScheme.primaryContainer : Theme.of(context).cardColor,
         elevation: widget.isSelected ? 4 : 2,
         shadowColor: Colors.black.withValues(alpha: 0.2),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
         child: InkWell(
           onTapDown: (_) => setState(() => _isPressed = true),
           onTapUp: (_) => setState(() => _isPressed = false),
@@ -180,13 +181,13 @@ class _TotpAccountCardState extends ConsumerState<TotpAccountCard> {
           onLongPress: widget.onLongPress,
           borderRadius: BorderRadius.circular(24),
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.all(16.0),
           child: Row(
             children: [
               if (widget.isSelected)
                  Padding(
                    padding: const EdgeInsets.only(right: 16.0),
-                   child: Icon(Icons.check_circle, color: Theme.of(context).colorScheme.primary),
+                   child: Icon(Icons.check_circle, color: Theme.of(context).colorScheme.primary, size: 24),
                  ),
               Expanded(
                 child: Column(
@@ -194,31 +195,76 @@ class _TotpAccountCardState extends ConsumerState<TotpAccountCard> {
                   children: [
                     Row(
                       children: [
-                        Text(
-                          widget.account.issuer,
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            color: Colors.grey.shade600,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.5,
+                        Expanded(
+                          child: Text(
+                            widget.account.accountName,
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         if (widget.account.isPinned)
                           Padding(
-                            padding: const EdgeInsets.only(left: 8.0),
+                            padding: const EdgeInsets.only(left: 8.0, right: 8.0),
                             child: Icon(Icons.push_pin, size: 16, color: Theme.of(context).colorScheme.primary),
+                          ),
+                        PopupMenuButton<String>(
+                          icon: const Icon(Icons.more_vert, size: 20),
+                          onSelected: (value) {
+                            if (value == 'recovery') {
+                              context.push('/recovery', extra: widget.account);
+                            }
+                          },
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(
+                              value: 'recovery',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.shield_outlined, size: 20),
+                                  SizedBox(width: 8),
+                                  Text('Recovery Codes'),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Text(
+                          widget.account.issuer,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.grey.shade500,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (widget.account.tags.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.secondaryContainer,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                widget.account.tags,
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: Theme.of(context).colorScheme.onSecondaryContainer,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ),
                           ),
                       ],
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      widget.account.accountName,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 300),
                       transitionBuilder: (Widget child, Animation<double> animation) {
@@ -230,8 +276,8 @@ class _TotpAccountCardState extends ConsumerState<TotpAccountCard> {
                         style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           color: _isCopied ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurface,
                           fontWeight: FontWeight.bold,
-                          letterSpacing: _isCopied ? 1.0 : 3.0,
-                          fontSize: _isCopied ? 20.0 : null,
+                          letterSpacing: _isCopied ? 1.0 : 4.0,
+                          fontSize: _isCopied ? 20.0 : 24.0,
                           fontFamily: _isCopied ? null : 'monospace',
                         ),
                       ),

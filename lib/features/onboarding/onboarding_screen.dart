@@ -53,18 +53,36 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  // Skip button
+                  TextButton(
+                    onPressed: _currentPage == 2 
+                        ? null 
+                        : () {
+                            _pageController.animateToPage(
+                              2,
+                              duration: const Duration(milliseconds: 500),
+                              curve: Curves.easeInOut,
+                            );
+                          },
+                    child: Text(
+                      _currentPage == 2 ? '' : 'Skip',
+                      style: TextStyle(
+                        color: _currentPage == 2 ? Colors.transparent : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
+                    ),
+                  ),
                   // Page Indicators
                   Row(
                     children: List.generate(3, (index) {
                       return AnimatedContainer(
                         duration: const Duration(milliseconds: 300),
-                        margin: const EdgeInsets.only(right: 8),
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
                         height: 8,
                         width: _currentPage == index ? 24 : 8,
                         decoration: BoxDecoration(
                           color: _currentPage == index 
                               ? Theme.of(context).colorScheme.primary 
-                              : Colors.grey.withValues(alpha: 0.5),
+                              : Colors.grey.withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(4),
                         ),
                       );
@@ -75,8 +93,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     onPressed: () async {
                       if (_currentPage < 2) {
                         _pageController.nextPage(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
+                          duration: const Duration(milliseconds: 500),
+                          curve: Curves.easeOutQuart,
                         );
                       } else {
                         // Mark onboarding complete and go home
@@ -87,7 +105,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         }
                       }
                     },
-                    child: Text(_currentPage == 2 ? 'Get Started' : 'Next'),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    ),
+                    child: Text(_currentPage == 2 ? 'Get Started' : 'Next', style: const TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),
@@ -104,24 +125,33 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 100, color: Theme.of(context).colorScheme.primary),
-          const SizedBox(height: 40),
+          Container(
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 100, color: Theme.of(context).colorScheme.primary),
+          ),
+          const SizedBox(height: 48),
           Text(
             title,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.5,
             ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
           Text(
             description,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: Colors.grey,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+              height: 1.5,
             ),
             textAlign: TextAlign.center,
           ),
-        ].animate(interval: 100.ms).fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0, duration: 400.ms, curve: Curves.easeOutQuad),
+        ].animate(interval: 150.ms).fadeIn(duration: 600.ms).slideY(begin: 0.2, end: 0, duration: 600.ms, curve: Curves.easeOutQuart),
       ),
     );
   }

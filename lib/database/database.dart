@@ -23,14 +23,23 @@ class Accounts extends Table {
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   BoolColumn get isPinned => boolean().withDefault(const Constant(false))();
   IntColumn get sortIndex => integer().withDefault(const Constant(0))();
+  TextColumn get tags => text().withDefault(const Constant(''))();
 }
 
-@DriftDatabase(tables: [Accounts])
+class RecoveryCodes extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get accountId => integer().customConstraint('NOT NULL REFERENCES accounts(id) ON DELETE CASCADE')();
+  TextColumn get code => text()();
+  BoolColumn get isUsed => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}
+
+@DriftDatabase(tables: [Accounts, RecoveryCodes])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -44,6 +53,13 @@ class AppDatabase extends _$AppDatabase {
       if (from < 3) {
         await m.addColumn(accounts, accounts.sortIndex);
       }
+      if (from < 4) {
+        await m.addColumn(accounts, accounts.tags);
+        await m.createTable(recoveryCodes);
+      }
+    },
+    beforeOpen: (details) async {
+      await customStatement('PRAGMA foreign_keys = ON');
     },
   );
 }

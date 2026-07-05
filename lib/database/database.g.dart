@@ -121,6 +121,16 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _tagsMeta = const VerificationMeta('tags');
+  @override
+  late final GeneratedColumn<String> tags = GeneratedColumn<String>(
+    'tags',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -133,6 +143,7 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
     createdAt,
     isPinned,
     sortIndex,
+    tags,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -212,6 +223,12 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
         sortIndex.isAcceptableOrUnknown(data['sort_index']!, _sortIndexMeta),
       );
     }
+    if (data.containsKey('tags')) {
+      context.handle(
+        _tagsMeta,
+        tags.isAcceptableOrUnknown(data['tags']!, _tagsMeta),
+      );
+    }
     return context;
   }
 
@@ -261,6 +278,10 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
         DriftSqlType.int,
         data['${effectivePrefix}sort_index'],
       )!,
+      tags: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tags'],
+      )!,
     );
   }
 
@@ -281,6 +302,7 @@ class Account extends DataClass implements Insertable<Account> {
   final DateTime createdAt;
   final bool isPinned;
   final int sortIndex;
+  final String tags;
   const Account({
     required this.id,
     required this.issuer,
@@ -292,6 +314,7 @@ class Account extends DataClass implements Insertable<Account> {
     required this.createdAt,
     required this.isPinned,
     required this.sortIndex,
+    required this.tags,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -306,6 +329,7 @@ class Account extends DataClass implements Insertable<Account> {
     map['created_at'] = Variable<DateTime>(createdAt);
     map['is_pinned'] = Variable<bool>(isPinned);
     map['sort_index'] = Variable<int>(sortIndex);
+    map['tags'] = Variable<String>(tags);
     return map;
   }
 
@@ -321,6 +345,7 @@ class Account extends DataClass implements Insertable<Account> {
       createdAt: Value(createdAt),
       isPinned: Value(isPinned),
       sortIndex: Value(sortIndex),
+      tags: Value(tags),
     );
   }
 
@@ -340,6 +365,7 @@ class Account extends DataClass implements Insertable<Account> {
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       isPinned: serializer.fromJson<bool>(json['isPinned']),
       sortIndex: serializer.fromJson<int>(json['sortIndex']),
+      tags: serializer.fromJson<String>(json['tags']),
     );
   }
   @override
@@ -356,6 +382,7 @@ class Account extends DataClass implements Insertable<Account> {
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'isPinned': serializer.toJson<bool>(isPinned),
       'sortIndex': serializer.toJson<int>(sortIndex),
+      'tags': serializer.toJson<String>(tags),
     };
   }
 
@@ -370,6 +397,7 @@ class Account extends DataClass implements Insertable<Account> {
     DateTime? createdAt,
     bool? isPinned,
     int? sortIndex,
+    String? tags,
   }) => Account(
     id: id ?? this.id,
     issuer: issuer ?? this.issuer,
@@ -381,6 +409,7 @@ class Account extends DataClass implements Insertable<Account> {
     createdAt: createdAt ?? this.createdAt,
     isPinned: isPinned ?? this.isPinned,
     sortIndex: sortIndex ?? this.sortIndex,
+    tags: tags ?? this.tags,
   );
   Account copyWithCompanion(AccountsCompanion data) {
     return Account(
@@ -396,6 +425,7 @@ class Account extends DataClass implements Insertable<Account> {
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       isPinned: data.isPinned.present ? data.isPinned.value : this.isPinned,
       sortIndex: data.sortIndex.present ? data.sortIndex.value : this.sortIndex,
+      tags: data.tags.present ? data.tags.value : this.tags,
     );
   }
 
@@ -411,7 +441,8 @@ class Account extends DataClass implements Insertable<Account> {
           ..write('period: $period, ')
           ..write('createdAt: $createdAt, ')
           ..write('isPinned: $isPinned, ')
-          ..write('sortIndex: $sortIndex')
+          ..write('sortIndex: $sortIndex, ')
+          ..write('tags: $tags')
           ..write(')'))
         .toString();
   }
@@ -428,6 +459,7 @@ class Account extends DataClass implements Insertable<Account> {
     createdAt,
     isPinned,
     sortIndex,
+    tags,
   );
   @override
   bool operator ==(Object other) =>
@@ -442,7 +474,8 @@ class Account extends DataClass implements Insertable<Account> {
           other.period == this.period &&
           other.createdAt == this.createdAt &&
           other.isPinned == this.isPinned &&
-          other.sortIndex == this.sortIndex);
+          other.sortIndex == this.sortIndex &&
+          other.tags == this.tags);
 }
 
 class AccountsCompanion extends UpdateCompanion<Account> {
@@ -456,6 +489,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
   final Value<DateTime> createdAt;
   final Value<bool> isPinned;
   final Value<int> sortIndex;
+  final Value<String> tags;
   const AccountsCompanion({
     this.id = const Value.absent(),
     this.issuer = const Value.absent(),
@@ -467,6 +501,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     this.createdAt = const Value.absent(),
     this.isPinned = const Value.absent(),
     this.sortIndex = const Value.absent(),
+    this.tags = const Value.absent(),
   });
   AccountsCompanion.insert({
     this.id = const Value.absent(),
@@ -479,6 +514,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     this.createdAt = const Value.absent(),
     this.isPinned = const Value.absent(),
     this.sortIndex = const Value.absent(),
+    this.tags = const Value.absent(),
   }) : issuer = Value(issuer),
        accountName = Value(accountName),
        secret = Value(secret);
@@ -493,6 +529,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     Expression<DateTime>? createdAt,
     Expression<bool>? isPinned,
     Expression<int>? sortIndex,
+    Expression<String>? tags,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -505,6 +542,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
       if (createdAt != null) 'created_at': createdAt,
       if (isPinned != null) 'is_pinned': isPinned,
       if (sortIndex != null) 'sort_index': sortIndex,
+      if (tags != null) 'tags': tags,
     });
   }
 
@@ -519,6 +557,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     Value<DateTime>? createdAt,
     Value<bool>? isPinned,
     Value<int>? sortIndex,
+    Value<String>? tags,
   }) {
     return AccountsCompanion(
       id: id ?? this.id,
@@ -531,6 +570,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
       createdAt: createdAt ?? this.createdAt,
       isPinned: isPinned ?? this.isPinned,
       sortIndex: sortIndex ?? this.sortIndex,
+      tags: tags ?? this.tags,
     );
   }
 
@@ -567,6 +607,9 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     if (sortIndex.present) {
       map['sort_index'] = Variable<int>(sortIndex.value);
     }
+    if (tags.present) {
+      map['tags'] = Variable<String>(tags.value);
+    }
     return map;
   }
 
@@ -582,7 +625,356 @@ class AccountsCompanion extends UpdateCompanion<Account> {
           ..write('period: $period, ')
           ..write('createdAt: $createdAt, ')
           ..write('isPinned: $isPinned, ')
-          ..write('sortIndex: $sortIndex')
+          ..write('sortIndex: $sortIndex, ')
+          ..write('tags: $tags')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $RecoveryCodesTable extends RecoveryCodes
+    with TableInfo<$RecoveryCodesTable, RecoveryCode> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RecoveryCodesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _accountIdMeta = const VerificationMeta(
+    'accountId',
+  );
+  @override
+  late final GeneratedColumn<int> accountId = GeneratedColumn<int>(
+    'account_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'REFERENCES accounts(id) ON DELETE CASCADE',
+  );
+  static const VerificationMeta _codeMeta = const VerificationMeta('code');
+  @override
+  late final GeneratedColumn<String> code = GeneratedColumn<String>(
+    'code',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _isUsedMeta = const VerificationMeta('isUsed');
+  @override
+  late final GeneratedColumn<bool> isUsed = GeneratedColumn<bool>(
+    'is_used',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_used" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    accountId,
+    code,
+    isUsed,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'recovery_codes';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<RecoveryCode> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('account_id')) {
+      context.handle(
+        _accountIdMeta,
+        accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_accountIdMeta);
+    }
+    if (data.containsKey('code')) {
+      context.handle(
+        _codeMeta,
+        code.isAcceptableOrUnknown(data['code']!, _codeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_codeMeta);
+    }
+    if (data.containsKey('is_used')) {
+      context.handle(
+        _isUsedMeta,
+        isUsed.isAcceptableOrUnknown(data['is_used']!, _isUsedMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  RecoveryCode map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RecoveryCode(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      accountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}account_id'],
+      )!,
+      code: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}code'],
+      )!,
+      isUsed: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_used'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $RecoveryCodesTable createAlias(String alias) {
+    return $RecoveryCodesTable(attachedDatabase, alias);
+  }
+}
+
+class RecoveryCode extends DataClass implements Insertable<RecoveryCode> {
+  final int id;
+  final int accountId;
+  final String code;
+  final bool isUsed;
+  final DateTime createdAt;
+  const RecoveryCode({
+    required this.id,
+    required this.accountId,
+    required this.code,
+    required this.isUsed,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['account_id'] = Variable<int>(accountId);
+    map['code'] = Variable<String>(code);
+    map['is_used'] = Variable<bool>(isUsed);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  RecoveryCodesCompanion toCompanion(bool nullToAbsent) {
+    return RecoveryCodesCompanion(
+      id: Value(id),
+      accountId: Value(accountId),
+      code: Value(code),
+      isUsed: Value(isUsed),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory RecoveryCode.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RecoveryCode(
+      id: serializer.fromJson<int>(json['id']),
+      accountId: serializer.fromJson<int>(json['accountId']),
+      code: serializer.fromJson<String>(json['code']),
+      isUsed: serializer.fromJson<bool>(json['isUsed']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'accountId': serializer.toJson<int>(accountId),
+      'code': serializer.toJson<String>(code),
+      'isUsed': serializer.toJson<bool>(isUsed),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  RecoveryCode copyWith({
+    int? id,
+    int? accountId,
+    String? code,
+    bool? isUsed,
+    DateTime? createdAt,
+  }) => RecoveryCode(
+    id: id ?? this.id,
+    accountId: accountId ?? this.accountId,
+    code: code ?? this.code,
+    isUsed: isUsed ?? this.isUsed,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  RecoveryCode copyWithCompanion(RecoveryCodesCompanion data) {
+    return RecoveryCode(
+      id: data.id.present ? data.id.value : this.id,
+      accountId: data.accountId.present ? data.accountId.value : this.accountId,
+      code: data.code.present ? data.code.value : this.code,
+      isUsed: data.isUsed.present ? data.isUsed.value : this.isUsed,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RecoveryCode(')
+          ..write('id: $id, ')
+          ..write('accountId: $accountId, ')
+          ..write('code: $code, ')
+          ..write('isUsed: $isUsed, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, accountId, code, isUsed, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RecoveryCode &&
+          other.id == this.id &&
+          other.accountId == this.accountId &&
+          other.code == this.code &&
+          other.isUsed == this.isUsed &&
+          other.createdAt == this.createdAt);
+}
+
+class RecoveryCodesCompanion extends UpdateCompanion<RecoveryCode> {
+  final Value<int> id;
+  final Value<int> accountId;
+  final Value<String> code;
+  final Value<bool> isUsed;
+  final Value<DateTime> createdAt;
+  const RecoveryCodesCompanion({
+    this.id = const Value.absent(),
+    this.accountId = const Value.absent(),
+    this.code = const Value.absent(),
+    this.isUsed = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  RecoveryCodesCompanion.insert({
+    this.id = const Value.absent(),
+    required int accountId,
+    required String code,
+    this.isUsed = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  }) : accountId = Value(accountId),
+       code = Value(code);
+  static Insertable<RecoveryCode> custom({
+    Expression<int>? id,
+    Expression<int>? accountId,
+    Expression<String>? code,
+    Expression<bool>? isUsed,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (accountId != null) 'account_id': accountId,
+      if (code != null) 'code': code,
+      if (isUsed != null) 'is_used': isUsed,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  RecoveryCodesCompanion copyWith({
+    Value<int>? id,
+    Value<int>? accountId,
+    Value<String>? code,
+    Value<bool>? isUsed,
+    Value<DateTime>? createdAt,
+  }) {
+    return RecoveryCodesCompanion(
+      id: id ?? this.id,
+      accountId: accountId ?? this.accountId,
+      code: code ?? this.code,
+      isUsed: isUsed ?? this.isUsed,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (accountId.present) {
+      map['account_id'] = Variable<int>(accountId.value);
+    }
+    if (code.present) {
+      map['code'] = Variable<String>(code.value);
+    }
+    if (isUsed.present) {
+      map['is_used'] = Variable<bool>(isUsed.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RecoveryCodesCompanion(')
+          ..write('id: $id, ')
+          ..write('accountId: $accountId, ')
+          ..write('code: $code, ')
+          ..write('isUsed: $isUsed, ')
+          ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
@@ -592,11 +984,22 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $AccountsTable accounts = $AccountsTable(this);
+  late final $RecoveryCodesTable recoveryCodes = $RecoveryCodesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [accounts];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [accounts, recoveryCodes];
+  @override
+  StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'accounts',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('recovery_codes', kind: UpdateKind.delete)],
+    ),
+  ]);
 }
 
 typedef $$AccountsTableCreateCompanionBuilder =
@@ -611,6 +1014,7 @@ typedef $$AccountsTableCreateCompanionBuilder =
       Value<DateTime> createdAt,
       Value<bool> isPinned,
       Value<int> sortIndex,
+      Value<String> tags,
     });
 typedef $$AccountsTableUpdateCompanionBuilder =
     AccountsCompanion Function({
@@ -624,7 +1028,31 @@ typedef $$AccountsTableUpdateCompanionBuilder =
       Value<DateTime> createdAt,
       Value<bool> isPinned,
       Value<int> sortIndex,
+      Value<String> tags,
     });
+
+final class $$AccountsTableReferences
+    extends BaseReferences<_$AppDatabase, $AccountsTable, Account> {
+  $$AccountsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$RecoveryCodesTable, List<RecoveryCode>>
+  _recoveryCodesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.recoveryCodes,
+    aliasName: $_aliasNameGenerator(db.accounts.id, db.recoveryCodes.accountId),
+  );
+
+  $$RecoveryCodesTableProcessedTableManager get recoveryCodesRefs {
+    final manager = $$RecoveryCodesTableTableManager(
+      $_db,
+      $_db.recoveryCodes,
+    ).filter((f) => f.accountId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_recoveryCodesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
 
 class $$AccountsTableFilterComposer
     extends Composer<_$AppDatabase, $AccountsTable> {
@@ -684,6 +1112,36 @@ class $$AccountsTableFilterComposer
     column: $table.sortIndex,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<String> get tags => $composableBuilder(
+    column: $table.tags,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  Expression<bool> recoveryCodesRefs(
+    Expression<bool> Function($$RecoveryCodesTableFilterComposer f) f,
+  ) {
+    final $$RecoveryCodesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.recoveryCodes,
+      getReferencedColumn: (t) => t.accountId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RecoveryCodesTableFilterComposer(
+            $db: $db,
+            $table: $db.recoveryCodes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$AccountsTableOrderingComposer
@@ -744,6 +1202,11 @@ class $$AccountsTableOrderingComposer
     column: $table.sortIndex,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get tags => $composableBuilder(
+    column: $table.tags,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$AccountsTableAnnotationComposer
@@ -786,6 +1249,34 @@ class $$AccountsTableAnnotationComposer
 
   GeneratedColumn<int> get sortIndex =>
       $composableBuilder(column: $table.sortIndex, builder: (column) => column);
+
+  GeneratedColumn<String> get tags =>
+      $composableBuilder(column: $table.tags, builder: (column) => column);
+
+  Expression<T> recoveryCodesRefs<T extends Object>(
+    Expression<T> Function($$RecoveryCodesTableAnnotationComposer a) f,
+  ) {
+    final $$RecoveryCodesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.recoveryCodes,
+      getReferencedColumn: (t) => t.accountId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RecoveryCodesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.recoveryCodes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$AccountsTableTableManager
@@ -799,9 +1290,9 @@ class $$AccountsTableTableManager
           $$AccountsTableAnnotationComposer,
           $$AccountsTableCreateCompanionBuilder,
           $$AccountsTableUpdateCompanionBuilder,
-          (Account, BaseReferences<_$AppDatabase, $AccountsTable, Account>),
+          (Account, $$AccountsTableReferences),
           Account,
-          PrefetchHooks Function()
+          PrefetchHooks Function({bool recoveryCodesRefs})
         > {
   $$AccountsTableTableManager(_$AppDatabase db, $AccountsTable table)
     : super(
@@ -826,6 +1317,7 @@ class $$AccountsTableTableManager
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<bool> isPinned = const Value.absent(),
                 Value<int> sortIndex = const Value.absent(),
+                Value<String> tags = const Value.absent(),
               }) => AccountsCompanion(
                 id: id,
                 issuer: issuer,
@@ -837,6 +1329,7 @@ class $$AccountsTableTableManager
                 createdAt: createdAt,
                 isPinned: isPinned,
                 sortIndex: sortIndex,
+                tags: tags,
               ),
           createCompanionCallback:
               ({
@@ -850,6 +1343,7 @@ class $$AccountsTableTableManager
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<bool> isPinned = const Value.absent(),
                 Value<int> sortIndex = const Value.absent(),
+                Value<String> tags = const Value.absent(),
               }) => AccountsCompanion.insert(
                 id: id,
                 issuer: issuer,
@@ -861,11 +1355,47 @@ class $$AccountsTableTableManager
                 createdAt: createdAt,
                 isPinned: isPinned,
                 sortIndex: sortIndex,
+                tags: tags,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$AccountsTableReferences(db, table, e),
+                ),
+              )
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback: ({recoveryCodesRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (recoveryCodesRefs) db.recoveryCodes,
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (recoveryCodesRefs)
+                    await $_getPrefetchedData<
+                      Account,
+                      $AccountsTable,
+                      RecoveryCode
+                    >(
+                      currentTable: table,
+                      referencedTable: $$AccountsTableReferences
+                          ._recoveryCodesRefsTable(db),
+                      managerFromTypedResult: (p0) => $$AccountsTableReferences(
+                        db,
+                        table,
+                        p0,
+                      ).recoveryCodesRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.accountId == item.id),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
         ),
       );
 }
@@ -880,9 +1410,326 @@ typedef $$AccountsTableProcessedTableManager =
       $$AccountsTableAnnotationComposer,
       $$AccountsTableCreateCompanionBuilder,
       $$AccountsTableUpdateCompanionBuilder,
-      (Account, BaseReferences<_$AppDatabase, $AccountsTable, Account>),
+      (Account, $$AccountsTableReferences),
       Account,
-      PrefetchHooks Function()
+      PrefetchHooks Function({bool recoveryCodesRefs})
+    >;
+typedef $$RecoveryCodesTableCreateCompanionBuilder =
+    RecoveryCodesCompanion Function({
+      Value<int> id,
+      required int accountId,
+      required String code,
+      Value<bool> isUsed,
+      Value<DateTime> createdAt,
+    });
+typedef $$RecoveryCodesTableUpdateCompanionBuilder =
+    RecoveryCodesCompanion Function({
+      Value<int> id,
+      Value<int> accountId,
+      Value<String> code,
+      Value<bool> isUsed,
+      Value<DateTime> createdAt,
+    });
+
+final class $$RecoveryCodesTableReferences
+    extends BaseReferences<_$AppDatabase, $RecoveryCodesTable, RecoveryCode> {
+  $$RecoveryCodesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $AccountsTable _accountIdTable(_$AppDatabase db) =>
+      db.accounts.createAlias(
+        $_aliasNameGenerator(db.recoveryCodes.accountId, db.accounts.id),
+      );
+
+  $$AccountsTableProcessedTableManager get accountId {
+    final $_column = $_itemColumn<int>('account_id')!;
+
+    final manager = $$AccountsTableTableManager(
+      $_db,
+      $_db.accounts,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_accountIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$RecoveryCodesTableFilterComposer
+    extends Composer<_$AppDatabase, $RecoveryCodesTable> {
+  $$RecoveryCodesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get code => $composableBuilder(
+    column: $table.code,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isUsed => $composableBuilder(
+    column: $table.isUsed,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$AccountsTableFilterComposer get accountId {
+    final $$AccountsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.accountId,
+      referencedTable: $db.accounts,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AccountsTableFilterComposer(
+            $db: $db,
+            $table: $db.accounts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RecoveryCodesTableOrderingComposer
+    extends Composer<_$AppDatabase, $RecoveryCodesTable> {
+  $$RecoveryCodesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get code => $composableBuilder(
+    column: $table.code,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isUsed => $composableBuilder(
+    column: $table.isUsed,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$AccountsTableOrderingComposer get accountId {
+    final $$AccountsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.accountId,
+      referencedTable: $db.accounts,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AccountsTableOrderingComposer(
+            $db: $db,
+            $table: $db.accounts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RecoveryCodesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $RecoveryCodesTable> {
+  $$RecoveryCodesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get code =>
+      $composableBuilder(column: $table.code, builder: (column) => column);
+
+  GeneratedColumn<bool> get isUsed =>
+      $composableBuilder(column: $table.isUsed, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$AccountsTableAnnotationComposer get accountId {
+    final $$AccountsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.accountId,
+      referencedTable: $db.accounts,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AccountsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.accounts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RecoveryCodesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $RecoveryCodesTable,
+          RecoveryCode,
+          $$RecoveryCodesTableFilterComposer,
+          $$RecoveryCodesTableOrderingComposer,
+          $$RecoveryCodesTableAnnotationComposer,
+          $$RecoveryCodesTableCreateCompanionBuilder,
+          $$RecoveryCodesTableUpdateCompanionBuilder,
+          (RecoveryCode, $$RecoveryCodesTableReferences),
+          RecoveryCode,
+          PrefetchHooks Function({bool accountId})
+        > {
+  $$RecoveryCodesTableTableManager(_$AppDatabase db, $RecoveryCodesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RecoveryCodesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RecoveryCodesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RecoveryCodesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> accountId = const Value.absent(),
+                Value<String> code = const Value.absent(),
+                Value<bool> isUsed = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => RecoveryCodesCompanion(
+                id: id,
+                accountId: accountId,
+                code: code,
+                isUsed: isUsed,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int accountId,
+                required String code,
+                Value<bool> isUsed = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => RecoveryCodesCompanion.insert(
+                id: id,
+                accountId: accountId,
+                code: code,
+                isUsed: isUsed,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$RecoveryCodesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({accountId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (accountId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.accountId,
+                                referencedTable: $$RecoveryCodesTableReferences
+                                    ._accountIdTable(db),
+                                referencedColumn: $$RecoveryCodesTableReferences
+                                    ._accountIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$RecoveryCodesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $RecoveryCodesTable,
+      RecoveryCode,
+      $$RecoveryCodesTableFilterComposer,
+      $$RecoveryCodesTableOrderingComposer,
+      $$RecoveryCodesTableAnnotationComposer,
+      $$RecoveryCodesTableCreateCompanionBuilder,
+      $$RecoveryCodesTableUpdateCompanionBuilder,
+      (RecoveryCode, $$RecoveryCodesTableReferences),
+      RecoveryCode,
+      PrefetchHooks Function({bool accountId})
     >;
 
 class $AppDatabaseManager {
@@ -890,4 +1737,6 @@ class $AppDatabaseManager {
   $AppDatabaseManager(this._db);
   $$AccountsTableTableManager get accounts =>
       $$AccountsTableTableManager(_db, _db.accounts);
+  $$RecoveryCodesTableTableManager get recoveryCodes =>
+      $$RecoveryCodesTableTableManager(_db, _db.recoveryCodes);
 }

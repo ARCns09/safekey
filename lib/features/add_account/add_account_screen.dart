@@ -18,6 +18,7 @@ class _AddAccountScreenState extends ConsumerState<AddAccountScreen> {
   String _issuer = '';
   String _accountName = '';
   String _secret = '';
+  String _tags = '';
   String _algorithm = 'SHA1';
   int _digits = 6;
 
@@ -31,6 +32,7 @@ class _AddAccountScreenState extends ConsumerState<AddAccountScreen> {
         issuer: _issuer,
         accountName: _accountName,
         secret: cleanSecret,
+        tags: drift.Value(_tags),
         algorithm: drift.Value(_algorithm),
         digits: drift.Value(_digits),
       );
@@ -96,6 +98,15 @@ class _AddAccountScreenState extends ConsumerState<AddAccountScreen> {
                   return null;
                 },
                 onSaved: (val) => _secret = val!,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                decoration: const InputDecoration(
+                  labelText: 'Tags (e.g. Work, Personal, Social)',
+                  border: OutlineInputBorder(),
+                  hintText: 'Comma separated',
+                ),
+                onSaved: (val) => _tags = val ?? '',
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(

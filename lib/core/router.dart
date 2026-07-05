@@ -6,6 +6,7 @@ import '../features/add_account/add_account_screen.dart';
 import '../features/scanner/scanner_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/settings/export_screen.dart';
+import '../features/home/recovery_codes_screen.dart';
 import '../database/database.dart';
 import 'package:flutter/material.dart';
 
@@ -99,6 +100,17 @@ final goRouter = GoRouter(
         state: state,
         child: const SettingsScreen(),
       ),
+    ),
+    GoRoute(
+      path: '/recovery',
+      pageBuilder: (context, state) {
+        final account = state.extra as Account;
+        return buildPageWithDefaultTransition(
+          context: context,
+          state: state,
+          child: RecoveryCodesScreen(account: account),
+        );
+      },
     ),
   ],
 );

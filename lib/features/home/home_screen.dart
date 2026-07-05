@@ -249,21 +249,70 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         data: (accounts) {
           if (accounts.isEmpty) {
             return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.qr_code_scanner, size: 80, color: Colors.grey.withValues(alpha: 0.5)),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No accounts yet',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.grey),
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(32.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.5),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.security_rounded,
+                          size: 80,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                      Text(
+                        'SafeKey',
+                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.0,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Your authenticator is empty.',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Scan your first QR code or manually add an account to get started.',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                        ),
+                      ),
+                      const SizedBox(height: 48),
+                      FilledButton.icon(
+                        onPressed: () => context.push('/scanner'),
+                        icon: const Icon(Icons.qr_code_scanner),
+                        label: const Text('Scan QR Code'),
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextButton.icon(
+                        onPressed: () => context.push('/add'),
+                        icon: const Icon(Icons.keyboard),
+                        label: const Text('Add Manually'),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ].animate(interval: 100.ms).fadeIn(duration: 500.ms).slideY(begin: 0.2, end: 0, duration: 500.ms, curve: Curves.easeOutQuart),
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Tap + to add a new account',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ].animate(interval: 100.ms).fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0, duration: 400.ms, curve: Curves.easeOutQuad),
+                ),
               ),
             );
           }
@@ -416,14 +465,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   _showPasteUriDialog(context);
                 },
               ),
-              ListTile(
-                leading: const Icon(Icons.file_upload),
-                title: const Text('Import from File'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _importFromFile(context);
-                },
-              ),
+
               ListTile(
                 leading: const Icon(Icons.keyboard),
                 title: const Text('Enter Secret Manually'),
@@ -512,152 +554,4 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
-  Future<void> _importFromFile(BuildContext context) async {
-    try {
-      const XTypeGroup typeGroup = XTypeGroup(
-        label: 'files',
-      );
-      final XFile? xFile = await openFile(acceptedTypeGroups: <XTypeGroup>[typeGroup]);
-
-      if (xFile == null) return;
-      final file = File(xFile.path);
-      final extension = xFile.name.split('.').last.toLowerCase();
-
-      if (extension == 'sqlite') {
-        final confirm = await showDialog<bool>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text('Restore Database'),
-            content: const Text('Warning: Restoring a database backup will overwrite all current accounts. This backup must have been created on this exact device (encryption key must match). Continue?'),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: const Text('Restore', style: TextStyle(color: Colors.red)),
-              ),
-            ],
-          ),
-        );
-
-        if (confirm == true) {
-          final dbFolder = await getApplicationDocumentsDirectory();
-          final dbPath = p.join(dbFolder.path, 'safekey.sqlite');
-          
-          await ref.read(databaseProvider).close();
-          await file.copy(dbPath);
-          ref.invalidate(databaseProvider);
-          
-          if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Database restored!')));
-        }
-        return;
-      }
-
-      // Handle JSON/TXT
-      final content = await file.readAsString();
-      
-      if (content.trim().startsWith('{')) {
-        // Try parsing as JSON
-        final Map<String, dynamic> json = jsonDecode(content);
-        
-        // Aegis
-        if (json.containsKey('version') && json.containsKey('db')) {
-          final entries = json['db']['entries'] as List?;
-          if (entries != null) {
-            int addedCount = 0;
-            for (final entry in entries) {
-              if (entry['type'] != 'totp') continue;
-              final info = entry['info'];
-              final secret = info['secret'];
-              final issuer = entry['issuer'] ?? 'Unknown';
-              final accountName = entry['name'] ?? 'Unknown';
-              final algo = info['algo'] ?? 'SHA1';
-              final digits = info['digits'] ?? 6;
-              
-              final newAccount = AccountsCompanion.insert(
-                issuer: issuer,
-                accountName: accountName,
-                secret: secret,
-                algorithm: drift.Value(algo.toString().toUpperCase()),
-                digits: drift.Value(digits),
-              );
-              await ref.read(accountRepositoryProvider).insertAccount(newAccount);
-              addedCount++;
-            }
-            if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Imported $addedCount accounts from Aegis backup!')));
-            return;
-          }
-        }
-        
-        // 2FAS
-        if (json.containsKey('services') && json['services'] is List) {
-          final services = json['services'] as List;
-          int addedCount = 0;
-          for (final service in services) {
-            final secret = service['secret'];
-            if (secret == null) continue;
-            final otp = service['otp'] ?? {};
-            final issuer = service['name'] ?? 'Unknown';
-            final algo = otp['algorithm'] ?? 'SHA1';
-            final digits = otp['digits'] ?? 6;
-            
-            final newAccount = AccountsCompanion.insert(
-              issuer: issuer,
-              accountName: issuer,
-              secret: secret,
-              algorithm: drift.Value(algo.toString().toUpperCase()),
-              digits: drift.Value(digits),
-            );
-            await ref.read(accountRepositoryProvider).insertAccount(newAccount);
-            addedCount++;
-          }
-          if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Imported $addedCount accounts from 2FAS backup!')));
-          return;
-        }
-      }
-
-      // Try parsing as raw otpauth:// URIs line by line
-      final lines = content.split('\n');
-      int addedCount = 0;
-      for (final line in lines) {
-        final uriString = line.trim();
-        if (uriString.startsWith('otpauth://')) {
-          try {
-            final uri = Uri.parse(uriString);
-            final queryParams = uri.queryParameters;
-            final secret = queryParams['secret']?.toUpperCase().replaceAll(' ', '') ?? '';
-            if (secret.isEmpty) continue;
-            String issuer = queryParams['issuer'] ?? 'Unknown';
-            String accountName = 'Unknown';
-            final pathParts = uri.path.substring(1).split(':');
-            if (pathParts.length > 1) {
-              if (issuer == 'Unknown') issuer = Uri.decodeComponent(pathParts[0]);
-              accountName = Uri.decodeComponent(pathParts.sublist(1).join(':'));
-            } else if (pathParts.isNotEmpty) {
-              accountName = Uri.decodeComponent(pathParts[0]);
-            }
-            final algo = queryParams['algorithm'] ?? 'SHA1';
-            final digits = int.tryParse(queryParams['digits'] ?? '6') ?? 6;
-            final newAccount = AccountsCompanion.insert(
-              issuer: issuer,
-              accountName: accountName,
-              secret: secret,
-              algorithm: drift.Value(algo),
-              digits: drift.Value(digits),
-            );
-            await ref.read(accountRepositoryProvider).insertAccount(newAccount);
-            addedCount++;
-          } catch (_) {}
-        }
-      }
-
-      if (addedCount > 0) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Imported $addedCount accounts from URIs!')));
-      } else {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No recognizable accounts found in file')));
-      }
-
-    } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to import file: $e')));
-    }
-  }
 }
