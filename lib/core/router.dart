@@ -7,6 +7,7 @@ import '../features/scanner/scanner_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/settings/export_screen.dart';
 import '../features/home/recovery_codes_screen.dart';
+import '../features/updater/screens/updates_screen.dart';
 import '../database/database.dart';
 import 'package:flutter/material.dart';
 
@@ -111,6 +112,14 @@ final goRouter = GoRouter(
           child: RecoveryCodesScreen(account: account),
         );
       },
+    ),
+    GoRoute(
+      path: '/updates',
+      pageBuilder: (context, state) => buildPageWithDefaultTransition(
+        context: context,
+        state: state,
+        child: const UpdatesScreen(),
+      ),
     ),
   ],
 );

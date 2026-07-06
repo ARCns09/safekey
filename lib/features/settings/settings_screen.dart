@@ -179,6 +179,15 @@ class SettingsScreen extends ConsumerWidget {
                   title: const Text('SafeKey Version'),
                   trailing: const Text('2.1.0', style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
+                const Divider(height: 1, indent: 56),
+                ListTile(
+                  leading: const Icon(Icons.system_update),
+                  title: const Text('Updates'),
+                  subtitle: const Text('Check for new versions'),
+                  onTap: () {
+                    context.push('/updates');
+                  },
+                ),
               ],
             ),
           ),
