@@ -55,6 +55,14 @@ SafeKey is engineered for absolute privacy:
 
 Detailed documentation on how to use SafeKey, understand its security architecture, and best practices for backing up your 2FA codes will be available in our [Wiki](../../wiki) soon!
 
+## Legal
+
+Additional legal documentation can be found here:
+
+- [Copyright](docs/legal/COPYRIGHT.md)
+- [Notice](docs/legal/NOTICE.md)
+- [Trademarks](docs/legal/TRADEMARKS.md)
+
 ---
 <div align="center">
   <sub>Built with ❤️ using Flutter.</sub>

@@ -4,7 +4,7 @@ Thank you for your interest in contributing to SafeKey! We welcome improvements,
 
 ## ⚠️ Important Legal Notice
 
-SafeKey uses a custom Source Available License. Please read [LICENSE.md](LICENSE.md) carefully before contributing. 
+SafeKey uses a custom Source Available License. Please read [LICENSE](LICENSE) carefully before contributing. 
 
 **By submitting a Pull Request, contributing code, or reporting issues to this repository, you agree to assign the rights to those contributions to the copyright holder (Naitik). Contributing code does NOT grant you any rights to publicly redistribute SafeKey, use its branding, or commercialize the software.**
 
