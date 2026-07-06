@@ -164,12 +164,12 @@ class _TotpAccountCardState extends ConsumerState<TotpAccountCard> {
     }
 
     return AnimatedScale(
-      scale: _isPressed ? 0.95 : 1.0,
+      scale: _isPressed ? 0.98 : 1.0,
       duration: const Duration(milliseconds: 100),
-      curve: Curves.easeInOut,
+      curve: Curves.easeOutCubic,
       child: Card(
         color: widget.isSelected ? Theme.of(context).colorScheme.primaryContainer : Theme.of(context).cardColor,
-        elevation: widget.isSelected ? 4 : 2,
+        elevation: widget.isSelected ? 4 : (_isPressed ? 8 : 2),
         shadowColor: Colors.black.withValues(alpha: 0.2),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
         margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
@@ -179,7 +179,9 @@ class _TotpAccountCardState extends ConsumerState<TotpAccountCard> {
           onTapCancel: () => setState(() => _isPressed = false),
           onTap: _handleTap,
           onLongPress: widget.onLongPress,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(28),
+          splashColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+          highlightColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Row(

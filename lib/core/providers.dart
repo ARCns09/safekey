@@ -76,3 +76,33 @@ class SortOrderNotifier extends Notifier<String> {
     ref.read(sharedPreferencesProvider).setString('sort_order', order);
   }
 }
+
+final searchQueryProvider = NotifierProvider<SearchQueryNotifier, String>(SearchQueryNotifier.new);
+
+class SearchQueryNotifier extends Notifier<String> {
+  @override
+  String build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    return prefs.getString('search_query') ?? '';
+  }
+
+  void setQuery(String query) {
+    state = query;
+    ref.read(sharedPreferencesProvider).setString('search_query', query);
+  }
+}
+
+final activeFilterProvider = NotifierProvider<ActiveFilterNotifier, String>(ActiveFilterNotifier.new);
+
+class ActiveFilterNotifier extends Notifier<String> {
+  @override
+  String build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    return prefs.getString('active_filter') ?? 'All';
+  }
+
+  void setFilter(String filter) {
+    state = filter;
+    ref.read(sharedPreferencesProvider).setString('active_filter', filter);
+  }
+}

@@ -58,4 +58,17 @@ class SecurityNotifier extends Notifier<bool> {
       // Handle error
     }
   }
+
+  Future<bool> authenticateForAction(String reason) async {
+    if (!isLockEnabled) return true;
+    if (!Platform.isAndroid && !Platform.isIOS) return true;
+    
+    try {
+      return await _auth.authenticate(
+        localizedReason: reason,
+      );
+    } catch (e) {
+      return false;
+    }
+  }
 }

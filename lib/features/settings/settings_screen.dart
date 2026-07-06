@@ -34,53 +34,6 @@ class SettingsScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-          // Statistics Dashboard
-          _buildSectionHeader(context, 'Dashboard', Icons.analytics_outlined),
-          Card(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            margin: const EdgeInsets.only(bottom: 24),
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildStatItem(context, 'Total', totalAccounts.toString(), Icons.format_list_numbered),
-                  _buildStatItem(context, 'Pinned', pinnedAccounts.toString(), Icons.push_pin),
-                  _buildStatItem(context, 'Hidden', hiddenAccounts.toString(), Icons.visibility_off),
-                ],
-              ),
-            ),
-          ),
-
-          // Appearance
-          _buildSectionHeader(context, 'Appearance', Icons.palette_outlined),
-          Card(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            margin: const EdgeInsets.only(bottom: 24),
-            child: Column(
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.brightness_6),
-                  title: const Text('Theme'),
-                  trailing: DropdownButton<ThemeMode>(
-                    value: themeMode,
-                    underline: const SizedBox(),
-                    items: const [
-                      DropdownMenuItem(value: ThemeMode.system, child: Text('System')),
-                      DropdownMenuItem(value: ThemeMode.light, child: Text('Light')),
-                      DropdownMenuItem(value: ThemeMode.dark, child: Text('Dark')),
-                    ],
-                    onChanged: (mode) {
-                      if (mode != null) {
-                        ref.read(themeProvider.notifier).setTheme(mode);
-                      }
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-
           // Security
           _buildSectionHeader(context, 'Security', Icons.security),
           Card(
@@ -111,13 +64,82 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
 
-          // Data & Accounts
-          _buildSectionHeader(context, 'Accounts & Data', Icons.data_usage),
+          // Backup & Restore
+          _buildSectionHeader(context, 'Backup & Restore', Icons.save_outlined),
           Card(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             margin: const EdgeInsets.only(bottom: 24),
             child: Column(
               children: [
+                ListTile(
+                  title: const Text('Export Accounts (QR)'),
+                  subtitle: const Text('Export as QR codes'),
+                  leading: const Icon(Icons.qr_code_scanner),
+                  onTap: () => _exportAccountsQR(context, ref, accounts),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  title: const Text('Backup Database'),
+                  subtitle: const Text('Export safekey.sqlite file'),
+                  leading: const Icon(Icons.save_alt),
+                  onTap: () => _exportDatabase(context, ref),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  title: const Text('Restore Database'),
+                  subtitle: const Text('Import safekey.sqlite file'),
+                  leading: const Icon(Icons.file_upload),
+                  onTap: () => _importFromFile(context, ref),
+                ),
+              ],
+            ),
+          ),
+
+          // Updates
+          _buildSectionHeader(context, 'Updates', Icons.system_update),
+          Card(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            margin: const EdgeInsets.only(bottom: 24),
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.system_update),
+                  title: const Text('Updates'),
+                  subtitle: const Text('Check for new versions'),
+                  onTap: () {
+                    context.push('/updates');
+                  },
+                ),
+              ],
+            ),
+          ),
+
+          // Appearance
+          _buildSectionHeader(context, 'Appearance', Icons.palette_outlined),
+          Card(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            margin: const EdgeInsets.only(bottom: 24),
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.brightness_6),
+                  title: const Text('Theme'),
+                  trailing: DropdownButton<ThemeMode>(
+                    value: themeMode,
+                    underline: const SizedBox(),
+                    items: const [
+                      DropdownMenuItem(value: ThemeMode.system, child: Text('System')),
+                      DropdownMenuItem(value: ThemeMode.light, child: Text('Light')),
+                      DropdownMenuItem(value: ThemeMode.dark, child: Text('Dark')),
+                    ],
+                    onChanged: (mode) {
+                      if (mode != null) {
+                        ref.read(themeProvider.notifier).setTheme(mode);
+                      }
+                    },
+                  ),
+                ),
+                const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.sort),
                   title: const Text('Sort Order'),
@@ -137,34 +159,25 @@ class SettingsScreen extends ConsumerWidget {
                     },
                   ),
                 ),
-                const Divider(height: 1),
-                ListTile(
-                  title: const Text('Export Accounts (QR)'),
-                  subtitle: const Text('Export as QR codes'),
-                  leading: const Icon(Icons.qr_code_scanner),
-                  onTap: () {
-                    if (accounts.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No accounts to export.')));
-                      return;
-                    }
-                    context.push('/export', extra: accounts);
-                  },
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  title: const Text('Backup Database'),
-                  subtitle: const Text('Export safekey.sqlite file'),
-                  leading: const Icon(Icons.save_alt),
-                  onTap: () => _exportDatabase(context),
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  title: const Text('Restore Database'),
-                  subtitle: const Text('Import safekey.sqlite file'),
-                  leading: const Icon(Icons.file_upload),
-                  onTap: () => _importFromFile(context, ref),
-                ),
               ],
+            ),
+          ),
+
+          // Statistics Dashboard
+          _buildSectionHeader(context, 'Dashboard', Icons.analytics_outlined),
+          Card(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            margin: const EdgeInsets.only(bottom: 24),
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildStatItem(context, 'Total', totalAccounts.toString(), Icons.format_list_numbered),
+                  _buildStatItem(context, 'Pinned', pinnedAccounts.toString(), Icons.push_pin),
+                  _buildStatItem(context, 'Hidden', hiddenAccounts.toString(), Icons.visibility_off),
+                ],
+              ),
             ),
           ),
           
@@ -182,11 +195,15 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 const Divider(height: 1, indent: 56),
                 ListTile(
-                  leading: const Icon(Icons.system_update),
-                  title: const Text('Updates'),
-                  subtitle: const Text('Check for new versions'),
+                  leading: const Icon(Icons.article),
+                  title: const Text('Licensing'),
+                  subtitle: const Text('View open-source licenses'),
                   onTap: () {
-                    context.push('/updates');
+                    showLicensePage(
+                      context: context,
+                      applicationName: 'SafeKey',
+                      applicationVersion: ref.read(updateStateProvider).currentVersion,
+                    );
                   },
                 ),
               ],
@@ -228,7 +245,98 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _exportDatabase(BuildContext context) async {
+  Future<bool> _confirmAndAuthenticate(BuildContext context, WidgetRef ref, String actionName, String warningText) async {
+    final confirm = await showModalBottomSheet<bool>(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.warning_amber_rounded, color: Theme.of(context).colorScheme.error, size: 32),
+                  const SizedBox(width: 16),
+                  Expanded(child: Text('Security Warning', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold))),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                warningText,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, false),
+                    child: const Text('Cancel'),
+                  ),
+                  const SizedBox(width: 8),
+                  FilledButton.icon(
+                    style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+                    icon: const Icon(Icons.security),
+                    label: Text(actionName),
+                    onPressed: () => Navigator.pop(ctx, true),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (confirm != true) return false;
+
+    return await ref.read(securityProvider.notifier).authenticateForAction('Authenticate to $actionName');
+  }
+
+  Future<void> _exportAccountsQR(BuildContext context, WidgetRef ref, List<dynamic> accounts) async {
+    if (accounts.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No accounts to export.')));
+      return;
+    }
+    
+    final authSuccess = await _confirmAndAuthenticate(
+      context, ref, 'Export QR Codes',
+      'This export contains unencrypted secrets for your accounts. Store it securely. Anyone with these QR codes may gain access to your accounts.'
+    );
+    
+    if (authSuccess && context.mounted) {
+      context.push('/export', extra: accounts);
+    }
+  }
+
+  Future<void> _exportDatabase(BuildContext context, WidgetRef ref) async {
+    final authSuccess = await _confirmAndAuthenticate(
+      context, ref, 'Backup Database',
+      'This backup contains encrypted secrets for your accounts. Store it securely. Anyone with this backup may gain access to your accounts.'
+    );
+    
+    if (!authSuccess) return;
+
+    if (!context.mounted) return;
+    
+    // Show progress dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        content: Row(
+          children: const [
+            CircularProgressIndicator(),
+            SizedBox(width: 24),
+            Text('Generating backup...'),
+          ],
+        ),
+      ),
+    );
+
     try {
       final dbFolder = await getApplicationDocumentsDirectory();
       final dbPath = p.join(dbFolder.path, 'safekey.sqlite');
@@ -236,6 +344,7 @@ class SettingsScreen extends ConsumerWidget {
       
       if (!await dbFile.exists()) {
         if (context.mounted) {
+          Navigator.pop(context); // Close dialog
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No database found to export.')));
         }
         return;
@@ -246,8 +355,9 @@ class SettingsScreen extends ConsumerWidget {
       final tempFile = File(p.join(tempDir.path, fileName));
       await dbFile.copy(tempFile.path);
       
-      final XFile xFile = XFile(tempFile.path);
+      if (context.mounted) Navigator.pop(context); // Close dialog
       
+      final XFile xFile = XFile(tempFile.path);
       final result = await Share.shareXFiles([xFile], text: 'SafeKey Database Backup');
       
       if (context.mounted && result.status == ShareResultStatus.success) {
@@ -255,12 +365,20 @@ class SettingsScreen extends ConsumerWidget {
       }
     } catch (e) {
       if (context.mounted) {
+        Navigator.pop(context); // Close dialog
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Export failed: $e')));
       }
     }
   }
 
   Future<void> _importFromFile(BuildContext context, WidgetRef ref) async {
+    final authSuccess = await _confirmAndAuthenticate(
+      context, ref, 'Restore Database',
+      'Restoring a database will permanently overwrite your current accounts. Ensure you are restoring a trusted SafeKey backup.'
+    );
+    
+    if (!authSuccess) return;
+
     try {
       const typeGroup = XTypeGroup(label: 'SQLite', extensions: ['sqlite', 'db']);
       final file = await openFile(acceptedTypeGroups: [typeGroup]);

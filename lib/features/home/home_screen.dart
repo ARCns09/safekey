@@ -22,8 +22,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  bool _isSearching = false;
-  String _searchQuery = '';
+  bool _isSearchExpanded = false;
   Set<int> _selectedIds = {};
 
   void _toggleSelection(int id) {
@@ -90,6 +89,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final sortOrder = ref.watch(sortOrderProvider);
     
     final bool isSelectionMode = _selectedIds.isNotEmpty;
+    
+    final accountsList = ref.watch(watchAccountsProvider).value ?? [];
+    final selectedAccounts = accountsList.where((acc) => _selectedIds.contains(acc.id)).toList();
+    final allSelectedArePinned = selectedAccounts.isNotEmpty && selectedAccounts.every((acc) => acc.isPinned);
 
     return Stack(
       children: [
@@ -103,14 +106,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 title: Text('${_selectedIds.length} selected'),
                 actions: [
                   IconButton(
-                    icon: const Icon(Icons.push_pin),
-                    tooltip: 'Pin Selected',
-                    onPressed: () => _togglePinSelectedAccounts(true),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.push_pin_outlined),
-                    tooltip: 'Unpin Selected',
-                    onPressed: () => _togglePinSelectedAccounts(false),
+                    icon: Icon(allSelectedArePinned ? Icons.push_pin_outlined : Icons.push_pin),
+                    tooltip: allSelectedArePinned ? 'Unpin Selected' : 'Pin Selected',
+                    onPressed: () => _togglePinSelectedAccounts(!allSelectedArePinned),
                   ),
                   IconButton(
                     icon: const Icon(Icons.qr_code_2),
@@ -127,43 +125,56 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     tooltip: 'Delete Selected',
                     onPressed: _deleteSelectedAccounts,
                   ),
+                  PopupMenuButton<String>(
+                    tooltip: 'More options',
+                    onSelected: (value) {
+                      if (value == 'move_tag') {
+                        // TODO: Implement move tag logic
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'move_tag',
+                        child: Row(
+                          children: [
+                            Icon(Icons.label_outline, size: 20),
+                            SizedBox(width: 8),
+                            Text('Move Tag'),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               )
             : AppBar(
-                title: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
-                  child: _isSearching
-                    ? TextField(
-                        key: const ValueKey('search'),
-                        autofocus: true,
-                        decoration: const InputDecoration(
-                          hintText: 'Search accounts...',
-                          border: InputBorder.none,
-                        ),
-                        onChanged: (val) {
-                          setState(() {
-                            _searchQuery = val.toLowerCase();
-                          });
-                        },
-                      )
-                    : const Text('SafeKey', key: ValueKey('title'), style: TextStyle(fontWeight: FontWeight.bold)),
-                ),
+                title: _isSearchExpanded
+                  ? TextField(
+                      key: const ValueKey('search'),
+                      autofocus: true,
+                      decoration: const InputDecoration(
+                        hintText: 'Search accounts...',
+                        border: InputBorder.none,
+                      ),
+                      onChanged: (val) {
+                        ref.read(searchQueryProvider.notifier).setQuery(val.toLowerCase());
+                      },
+                    ).animate().fadeIn(duration: 200.ms).slideX(begin: 0.1, end: 0)
+                  : const Text('SafeKey', key: ValueKey('title'), style: TextStyle(fontWeight: FontWeight.bold))
+                      .animate().fadeIn(duration: 200.ms).slideX(begin: -0.1, end: 0),
             actions: [
               IconButton(
-                icon: Icon(_isSearching ? Icons.close : Icons.search),
+                icon: Icon(_isSearchExpanded ? Icons.close : Icons.search),
                 onPressed: () {
                   setState(() {
-                    if (_isSearching) {
-                      _isSearching = false;
-                      _searchQuery = '';
-                    } else {
-                      _isSearching = true;
-                    }
+                    _isSearchExpanded = !_isSearchExpanded;
                   });
+                  if (!_isSearchExpanded) {
+                    ref.read(searchQueryProvider.notifier).setQuery('');
+                  }
                 },
               ),
-              if (!_isSearching)
+              if (!_isSearchExpanded)
                 PopupMenuButton<String>(
                   icon: const Icon(Icons.sort),
                   tooltip: 'Sort/Group',
@@ -233,7 +244,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ],
                 ),
-              if (!_isSearching)
+              if (!_isSearchExpanded)
                 IconButton(
                   icon: const Icon(Icons.settings),
                   onPressed: () {
@@ -313,9 +324,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 );
               }
+
+              final activeFilter = ref.watch(activeFilterProvider);
+              final searchQuery = ref.watch(searchQueryProvider);
+
+              // Gather unique tags
+              final allTags = accounts
+                  .map((a) => a.tags)
+                  .where((t) => t.isNotEmpty)
+                  .expand((t) => t.split(','))
+                  .map((t) => t.trim())
+                  .where((t) => t.isNotEmpty)
+                  .toSet()
+                  .toList()..sort();
+              
+              final bool hasTags = allTags.isNotEmpty || activeFilter != 'All';
+
               var filteredAccounts = accounts.where((acc) {
-                return acc.issuer.toLowerCase().contains(_searchQuery) ||
-                       acc.accountName.toLowerCase().contains(_searchQuery);
+                final matchesSearch = acc.issuer.toLowerCase().contains(searchQuery) ||
+                                      acc.accountName.toLowerCase().contains(searchQuery);
+                
+                bool matchesFilter = true;
+                if (activeFilter == 'Pinned') {
+                  matchesFilter = acc.isPinned;
+                } else if (activeFilter != 'All') {
+                  final accTags = acc.tags.split(',').map((e) => e.trim()).toList();
+                  matchesFilter = accTags.contains(activeFilter);
+                }
+
+                return matchesSearch && matchesFilter;
               }).toList();
               
               if (sortOrder == 'name') {
@@ -332,40 +369,58 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               var unpinned = filteredAccounts.where((a) => !a.isPinned).toList();
               filteredAccounts = [...pinned, ...unpinned];
 
-              if (filteredAccounts.isEmpty) {
-                return Center(
-                  child: Text(
-                    _searchQuery.isNotEmpty ? 'No matches found' : 'No accounts yet',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.grey),
-                  ),
-                );
-              }
-              return ReorderableListView.builder(
-                buildDefaultDragHandles: false,
-                onReorder: (oldIndex, newIndex) async {
-                  if (newIndex > oldIndex) {
-                    newIndex -= 1;
-                  }
-                  if (_isSearching) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cannot reorder while searching')));
-                    return;
-                  }
-                  if (sortOrder != 'custom') {
-                    ref.read(sortOrderProvider.notifier).setSortOrder('custom');
-                  }
-                  
-                  final currentList = List<Account>.from(filteredAccounts);
-                  final item = currentList.removeAt(oldIndex);
-                  currentList.insert(newIndex, item);
+              Widget bodyContent;
 
-                  final repo = ref.read(accountRepositoryProvider);
-                  for (int i = 0; i < currentList.length; i++) {
-                    final acc = currentList[i];
-                    if (acc.sortIndex != i) {
-                      await repo.updateAccount(acc.copyWith(sortIndex: i));
+              if (filteredAccounts.isEmpty) {
+                bodyContent = Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.search_off, size: 64, color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5)),
+                      const SizedBox(height: 16),
+                      Text('No matching accounts', style: Theme.of(context).textTheme.titleLarge),
+                      const SizedBox(height: 8),
+                      Text('Try another search or remove filters.', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey)),
+                      const SizedBox(height: 24),
+                      if (searchQuery.isNotEmpty || activeFilter != 'All')
+                        FilledButton.tonal(
+                          onPressed: () {
+                            ref.read(searchQueryProvider.notifier).setQuery('');
+                            ref.read(activeFilterProvider.notifier).setFilter('All');
+                            setState(() { _isSearchExpanded = false; });
+                          },
+                          child: const Text('Clear Filters'),
+                        ),
+                    ],
+                  ).animate().fadeIn(),
+                );
+              } else {
+                bodyContent = ReorderableListView.builder(
+                  buildDefaultDragHandles: false,
+                  onReorder: (oldIndex, newIndex) async {
+                    if (newIndex > oldIndex) {
+                      newIndex -= 1;
                     }
-                  }
-                },
+                    if (searchQuery.isNotEmpty || activeFilter != 'All') {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cannot reorder while filtering')));
+                      return;
+                    }
+                    if (sortOrder != 'custom') {
+                      ref.read(sortOrderProvider.notifier).setSortOrder('custom');
+                    }
+                    
+                    final currentList = List<Account>.from(filteredAccounts);
+                    final item = currentList.removeAt(oldIndex);
+                    currentList.insert(newIndex, item);
+
+                    final repo = ref.read(accountRepositoryProvider);
+                    for (int i = 0; i < currentList.length; i++) {
+                      final acc = currentList[i];
+                      if (acc.sortIndex != i) {
+                        await repo.updateAccount(acc.copyWith(sortIndex: i));
+                      }
+                    }
+                  },
                 itemCount: filteredAccounts.length,
                 itemBuilder: (context, index) {
                   final account = filteredAccounts[index];
@@ -412,6 +467,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ).animate(key: ValueKey('anim_${account.id}')).fadeIn(duration: 300.ms, delay: (index * 50).ms).slideX(begin: 0.05, end: 0, duration: 300.ms, curve: Curves.easeOutQuad);
                 },
+              );
+              }
+
+              return Column(
+                children: [
+                  if (hasTags)
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeOutQuart,
+                      height: 56,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                        children: [
+                          _buildFilterChip('All', activeFilter),
+                          _buildFilterChip('Pinned', activeFilter),
+                          ...allTags.map((t) => _buildFilterChip(t, activeFilter)),
+                        ],
+                      ),
+                    ),
+                  Expanded(child: bodyContent),
+                ],
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
@@ -551,6 +628,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to parse URI')));
     }
+  }
+
+  Widget _buildFilterChip(String label, String activeFilter) {
+    final bool isSelected = label == activeFilter;
+    return Padding(
+      padding: const EdgeInsets.only(right: 8.0),
+      child: FilterChip(
+        label: Text(label),
+        selected: isSelected,
+        onSelected: (selected) {
+          if (selected) {
+            ref.read(activeFilterProvider.notifier).setFilter(label);
+          } else if (label != 'All') {
+            ref.read(activeFilterProvider.notifier).setFilter('All');
+          }
+        },
+      ),
+    );
   }
 
 }
