@@ -40,7 +40,7 @@ SafeKey is a modern, premium alternative to traditional authenticator apps. Buil
 
 You can grab the latest stable release of SafeKey from the Releases page.
 
-**[👉 Download the latest APK here](../../releases/latest)**
+**[👉 Download the latest APK here](https://safekey-website.vercel.app/download)**
 
 *Note: SafeKey is currently available exclusively for Android.*
 
