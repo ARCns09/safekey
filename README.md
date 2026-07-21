@@ -1,6 +1,6 @@
 <div align="center">
-
-  <h1>🛡️ SafeKey</h1>
+  <img src="Images/SafeKey.jpg" width="100" alt="SafeKey Logo" style="border-radius: 20%; margin-bottom: 15px;" />
+  <h1>SafeKey</h1>
   <p><strong>A beautifully designed, secure, and offline-first Authenticator for Android.</strong></p>
 
   <p>
@@ -53,7 +53,7 @@ SafeKey was built from the ground up to guarantee that your most sensitive 2FA c
 
 SafeKey is distributed as a pre-compiled Android APK.
 
-1. Download the latest release APK from the [Releases](https://github.com/ARCns09/safekey/releases) page.
+1. Download the latest release APK from the [Releases](https://github.com/ARCns09/safekey/releases/latest) page.
 2. Transfer the file to your Android device.
 3. Open the file to install (you may need to enable "Install from unknown sources" in your Android settings).
 
