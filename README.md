@@ -13,57 +13,75 @@
 
   <p>
     <a href="#features">Features</a> •
-    <a href="#download">Download</a> •
-    <a href="#privacy--security">Security</a> •
-    <a href="#wiki">Wiki</a>
+    <a href="#installation">Download</a> •
+    <a href="#tech-stack">Tech Stack</a>
   </p>
 </div>
 
 ---
 
-## 🌟 About SafeKey
+SafeKey is a local-first, privacy-respecting TOTP authenticator for Android. It stores all 2FA secrets securely on-device using an encrypted SQLite database and enforces access via native biometric authentication.
 
-SafeKey is a modern, premium alternative to traditional authenticator apps. Built entirely from the ground up to respect your privacy, SafeKey is a **100% offline-first application**. We believe your 2FA codes belong to you, securely stored on your device without being forced into cloud syncing or mandatory third-party accounts.
+## Features
 
-## ✨ Features
+SafeKey was built from the ground up to guarantee that your most sensitive 2FA codes never leave your device. It doesn't even request Internet permissions in its Android Manifest—making data exfiltration physically impossible.
 
-- 🎨 **Premium Material 3 Design**: Enjoy a sleek, modern interface with dynamic colors and smooth animations.
-- 🚫 **100% Offline & Private**: Zero network requests. No tracking. No telemetry. Your data stays on your device.
-- 🛡️ **Encrypted Recovery Vault**: Securely store your one-time recovery and backup codes directly inside the app.
-- 🏷️ **Account Categorization**: Categorize and organize your codes (Work, Personal, Social, etc.).
-- 🔒 **Biometric App Lock**: Require fingerprint or face unlock to access your codes.
-- 🕵️ **Privacy Mode**: Hide codes by default to prevent shoulder surfing.
-- 📦 **Raw Database Backups**: Export and import your encrypted raw SQLite database directly.
-- 📤 **QR Export**: Easily migrate your accounts to other devices using standard `otpauth-migration` QR codes.
+- **Standard TOTP Generation:** Fully compatible with Google Authenticator. Generates standard time-based one-time passwords using SHA1, SHA256, and SHA512 algorithms.
+- **Encrypted Local Storage:** All account data is stored locally in an AES-256 encrypted SQLite database using SQLCipher. No data is sent to a central server.
+- **Biometric App Lock:** Secures app access and sensitive operations (like database exports) using the device's native biometric APIs (fingerprint/face unlock).
+- **Dynamic Tag Filtering:** Organizes accounts automatically via custom tags for quick retrieval and sorting.
+- **Interactive UI:** A highly polished Material 3 design featuring 120Hz-friendly interactive animations, including cards that scale and elevate on touch.
+- **Secure Backups:** Import or export accounts via standard `otpauth-migration` QR codes or raw encrypted database files.
+- **In-App Updates:** Automatically fetches and installs updates directly from GitHub Releases via an elegant native updater, without requiring a central app store.
 
-## 🚀 Download
+## Screenshots
 
-You can grab the latest stable release of SafeKey from the Releases page.
+<p align="center">
+  <img src="Images/home_empty.jpg" width="30%" />
+  <img src="Images/home.jpg" width="30%" />
+  <img src="Images/settings.jpg" width="30%" />
+</p>
 
-**[👉 Download the latest APK here](https://safekey-website.vercel.app/download)**
+## Tech Stack
 
-*Note: SafeKey is currently available exclusively for Android.*
+- **Flutter & Dart:** Chosen to quickly build a highly responsive UI with 120Hz-friendly interactive animations. Currently compiled exclusively for Android.
+- **Drift & SQLCipher:** Used for local persistence. Drift provides type-safe reactive SQL queries, while SQLCipher ensures the raw database file remains encrypted at rest.
+- **Riverpod:** Handles state management for predictable data flow, which is necessary for reactive UI filtering and real-time TOTP progress updates.
+- **Local Auth:** Integrates with Android's secure keystore to enforce biometric authentication.
 
-## 🛡️ Privacy & Security
+## Installation
 
-SafeKey is engineered for absolute privacy:
-- **No Internet Permission**: The app doesn't even ask for internet access permissions in its Android Manifest. It physically cannot send your data anywhere.
-- **Local Storage**: All 2FA secrets and recovery codes are stored locally on your device in a secure SQLite database.
-- **Biometric Security**: Uses Android's native secure keystore and biometric APIs to lock the app.
+SafeKey is distributed as a pre-compiled Android APK.
 
-## 📖 Wiki & Documentation
+1. Download the latest release APK from the [Releases](https://github.com/ARCns09/safekey/releases) page.
+2. Transfer the file to your Android device.
+3. Open the file to install (you may need to enable "Install from unknown sources" in your Android settings).
 
-Detailed documentation on how to use SafeKey, understand its security architecture, and best practices for backing up your 2FA codes will be available in our [Wiki](../../wiki) soon!
+## Project Structure
 
-## Legal
+- `lib/core/` - Application-wide providers, security state, and routing configuration.
+- `lib/database/` - Drift database schema, table definitions, and data access objects.
+- `lib/features/` - Core UI screens divided by feature (e.g., home, scanner, settings, updater).
+- `lib/widgets/` - Reusable UI components like animated TOTP account cards and filter chips.
+- `Images/` - Screenshots used in the README documentation.
 
-Additional legal documentation can be found here:
+## Roadmap
 
-- [Copyright](docs/legal/COPYRIGHT.md)
-- [Notice](docs/legal/NOTICE.md)
-- [Trademarks](docs/legal/TRADEMARKS.md)
+- Native iOS support (pending Apple Developer provisioning).
+- Support for HOTP (counter-based) tokens.
+- Automated local encrypted backups to user-defined directories.
 
----
-<div align="center">
-  <sub>Built with ❤️ using Flutter.</sub>
-</div>
+## Contributing
+
+Contributions are welcome. For major changes, please open an issue first to discuss what you would like to change.
+
+1. Fork the project.
+2. Create your feature branch (`git checkout -b feature/NewFeature`).
+3. Ensure the code passes formatting and linting (`flutter analyze`).
+4. Commit your changes (`git commit -m 'Add NewFeature'`).
+5. Push to the branch (`git push origin feature/NewFeature`).
+6. Open a Pull Request.
+
+## License
+
+SafeKey source code is publicly available for transparency and personal use, but custom licensing applies to protect the project's branding, distribution, and commercial rights. See the [LICENSE](LICENSE) file for specific terms of use. Additional information can be found in the `docs/legal/` directory.
